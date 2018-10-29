@@ -9,5 +9,4 @@ Dependencies:
 - Node
 - MongoDB
 
-Currently not deployed, test using the command
-> node src/app.js
+Currently not deployed, test using the command: `node src/app.js`
