@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Spotify Accounts Authentication Examples
 
 This project contains basic demos showing the different OAuth 2.0 flows for [authenticating against the Spotify Web API](https://developer.spotify.com/web-api/authorization-guide/).
@@ -33,3 +34,17 @@ In order to run the different examples, open the folder with the name of the flo
     $ node app.js
 
 Then, open `http://localhost:8888` in a browser.
+=======
+# FindTune
+A Repository for Team 6 in section A5 for the 411: Software Engineering course.
+
+We aim to let users find new and interesting music with ease. Sit in your seat and just listen.
+We use Microsoft Azure Face API to track your emotion and the Spotify API to find songs.
+Depending on your reaction, we will either save it to a playlist or find a different song for you!
+
+Dependencies:
+- Node
+- MongoDB
+
+Currently not deployed, test using the command: `node src/app.js`
+>>>>>>> 03e4c4996ac6dc49eca8c09a7cf394ab21165d46
