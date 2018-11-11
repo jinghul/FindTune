@@ -131,21 +131,22 @@ describe("Updating records...", function() {
     var user;
 
     this.beforeEach(function(done) {
-        user = new User({
-            name : "UpdateUser",
-        });
+        User.create({name : "UpdateUser"}).then(() => {done();});
+        // user = new User({
+        //     name : "UpdateUser",
+        // });
 
-         user.save().then(function() {
-            done();
-         });
+        // user.save().then(function() {
+        //    done();
+        // });
     });
 
     it('Updates one record from database', function(done) {
         User.findOneAndUpdate({name:'UpdateUser'}, {name:'Updated'}).then(function() {
-            User.findOne({_id:user.id}).then(function(result) {
+            User.findOne({name : "Updated"}).then(function(result) {
                 assert(result.name === "Updated");
                 done();
-            });
-        });
+            }).catch(done);
+        }).catch(done);
     });
 });

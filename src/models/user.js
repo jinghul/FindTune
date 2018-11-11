@@ -10,12 +10,12 @@ const PreferenceSchema = new Schema({
 
 const UserSchema = new Schema({
     name: String, // user name, required
-    profile : String, // user id from Spotify, required
+    userid : String, // user id from Spotify, required
+    playlistid : String, // custom playlists for our app
+    premium : Boolean,
     preferences : [PreferenceSchema] // preference array based on category
 });
 
 const User = mongoose.model('user', UserSchema);
 
 module.exports = User;
-
-// var user = new User({name: xx, preference: xx});
