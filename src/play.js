@@ -13,8 +13,15 @@ var login_url = "http://localhost:8888/login/";
 /* Database */
 var mongoose = require('mongoose');
 var User = require('./models/user');
-var Category = require('./models/cache');
+var Cache = require('./models/cache');
+var Song = Cache.Song;
+var Playlist = Cache.Playlist;
 var database_ref = 'mongodb://localhost/findtune'
+
+/* Database Instances */
+var user;
+var playlist;
+var queue;
 
 
 // check if connection exits?
@@ -43,8 +50,6 @@ router.get('/', (req, res) => {
         json: true
     };
     
-    var user;
-
     // get the user profile and see if they exist in database
     request.get(prof_options, function(error, response, body) {
         if (!error && response.statusCode === 200) {
@@ -53,8 +58,10 @@ router.get('/', (req, res) => {
                     user = new User({
                         name : body.display_name, 
                         userid : body.id,
-                        premium : body.product === "premium"
-                    }).save();
+                        premium : body.product === "premium",
+                        preferences : []
+                    });
+                    user.save();
 
                     userid = body.id;
                 } else {
@@ -64,16 +71,37 @@ router.get('/', (req, res) => {
                     playlistid = user.playlistid;
                     user.save();
                 }
+            }).then(() => {
+                /* verify playlist or create playlist, then load the queue */
+                if (playlistid) {
+                    var check_playlist_options = {
+                        url : 'https://api.spotify.com/v1/playlists/' + playlistid + '/',
+                        headers: { 'Authorization': 'Bearer ' + access_token },
+                        json: true
+                    }
 
-                
-            }).then(() => {verify_playlist(user);});
+                    request.get(check_playlist_options, (error, response, body) => {
+                        if (error || response.statusCode != 200) {
+                            Playlist.findOneAndDelete({playlistid : playlistid});
+                            create_playlist(user);
+                        } else {
+                            Playlist.findOne({playlistid : playlistid}).then(function(record) {
+                                playlist = record;
+                                queue = record.queue; 
+                            });
+                        }
+                    });
+                } else {
+                    create_playlist(user);
+                }
+            });
         } else {
             res.send(response).end();
         }
     });
 
-    // get camera access
-
+    res.sendFile(__dirname + '/public/play.html');
+    // face api should get camera access
 });
 
 var create_playlist = function(user) {
@@ -89,45 +117,38 @@ var create_playlist = function(user) {
     }
 
     request.post(create_playlist_options, (error, response, body) => {
-        playlistid = body.id;
         user.playlistid = body.id;
-        user.save().then(() => {
-            console.log(body);
-        }).catch(() => {});
+        user.save();
+        playlist = new Playlist({
+            playlistid : body.id,
+            songs : [],
+            queue : []
+        });
+        playlist.save();
     });
 }
 
-var verify_playlist = function(user) {
-    if (playlistid) {
-        var check_playlist_options = {
-            url : 'https://api.spotify.com/v1/playlists/' + playlistid + '/',
-            headers: { 'Authorization': 'Bearer ' + access_token },
-            json: true
-        }
-
-        request.get(check_playlist_options, (error, response, body) => {
-            if (error || response.statusCode != 200) {
-                create_playlist(user);
-            }
-        });
-    } else {
-        create_playlist(user);
-    }
-}
-
-router.get('/skip', (req, res) => {
+router.post('/skip', (req, res) => {
     // skip this song, if possible, and remember preference
-    
+    var skip_song_options = {
+        url : 'https://api.spotify.com/v1/me/player/next/',
+        headers: {'Authorization' : 'Bearer ' + access_token },
+        json : true
+    }
+
+    request.post(skip_song_options, (error, response, body) => {
+        res.json(response).end();
+    });
+
 });
 
-router.get('/like', (req, res) => {
-    // like song and save to playlist
+router.post('/like', (req, res) => {
+    // like song and save to playlist, also get recommendations and add to queue
 
 });
 
-router.get('/update', (req, res) => {
+router.post('/refresh', (req, res) => {
     access_token = req.query.access_token;
-
 });
 
 module.exports = router;

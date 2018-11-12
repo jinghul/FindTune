@@ -4,14 +4,18 @@ const Schema = mongoose.Schema;
 const SongSchema = new Schema({
     name : String, // name of the song
     songid : String, // songID from Spotify, required
-    artistid : String // artistID
-});
-
-const CategorySchema = new Schema({
+    artistid : String, // artistID
     categoryid : String, // categoryID, mapped from PreferenceSchema, required
-    songs : [SongSchema] // array of cached songs from the genre
 });
 
-const Category = mongoose.model('category', CategorySchema);
+const PlaylistSchema = new Schema({
+    playlistid : String, // id of the user playlist
+    songs : [String], // songids
+    queue : [String] // queue of songs to add
+});
 
-module.exports = Category;
+const Song = mongoose.model('song', SongSchema);
+const Playlist = mongoose.model('playlist', PlaylistSchema);
+
+module.exports.Song = Song;
+module.exports.Playlist = Playlist;

@@ -21,7 +21,7 @@ var play_url = "http://localhost:8888/play/?";
 
 /* Spotify Client Permission Variables */
 var stateKey = 'spotify_auth_state';
-var scope = 'user-top-read user-read-private playlist-modify-public playlist-modify-private';
+var scope = 'user-top-read user-modify-playback-state user-read-private playlist-modify-public playlist-modify-private';
 
 /**
  * Generates a random string containing numbers and letters
