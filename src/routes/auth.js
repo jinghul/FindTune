@@ -4,45 +4,38 @@
  * A router is used to add these paths to the /auth url
  * of our domain when an user first comes to our app.
  */
-var express = require('express'); // Express web server framework
+
+var express = require('express');
 var router = express.Router();
 
-var request = require('request'); // "Request" library
+/* Request and HTTP utils */
+var utils = require('../utils');
+var request = require('request');
 var cors = require('cors');
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
 
 /* Load Auth Variables */
-var keys = require("../keys.json");
-var client_id = keys.spotify.client;
-var client_secret = keys.spotify.secret;
-var redirect_uri = 'http://localhost:8888/login/callback/';
-var play_url = "http://localhost:8888/play/?";
+const keys = require("../../keys.json");
+const client_id = keys.spotify.client;
+const client_secret = keys.spotify.secret;
+const default_redirect_uri = 'http://localhost:8888/login/callback/';
+const play_url = "http://localhost:8888/play/?";
 
 /* Spotify Client Permission Variables */
-var stateKey = 'spotify_auth_state';
-var scope = 'user-top-read user-modify-playback-state user-read-private playlist-modify-public playlist-modify-private';
+const stateKey = 'spotify_auth_state';
+const scope = 'user-top-read user-modify-playback-state user-read-private playlist-modify-public playlist-modify-private';
 
-/**
- * Generates a random string containing numbers and letters
- * @param  {number} length The length of the string
- * @return {string} The generated string
- */
-var generateRandomString = function(length) {
-    var text = '';
-    var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-    for (var i = 0; i < length; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
-};
-
-router.use(cors()).use(cookieParser());
+router.use(cors())
+      .use(cookieParser());
 
 
 router.get('/', function(req, res) {
-    var state = generateRandomString(16);
+    var state = utils.generateRandomString(16);
+
+    // on the index page when user clicks login or from another page,
+    // get current window location and redirect to it after
+    var redirect_uri = req.cookies ? req.cookies[redirect] : default_redirect_uri;
     res.cookie(stateKey, state);
 
     // your application requests authorization
@@ -102,6 +95,8 @@ router.get('/callback', function(req, res) {
                   access_token : access_token
                 }));
             } else {
+
+                // TODO: next(err)
                 res.redirect('/#' +
                   querystring.stringify({
                     error: 'invalid_token'
@@ -113,6 +108,7 @@ router.get('/callback', function(req, res) {
 
 router.get('/refresh_token', function(req, res) {
     // requesting access token from refresh token
+    // TODO: every 50 minutes, play/refresh
     var refresh_token = req.query.refresh_token;
     var authOptions = {
         url: 'https://accounts.spotify.com/api/token',
@@ -137,5 +133,3 @@ router.get('/refresh_token', function(req, res) {
 });
 
 module.exports = router;
-// console.log('Listening on 8888');
-// app.listen(8888);

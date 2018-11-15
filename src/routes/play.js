@@ -1,4 +1,5 @@
-var express = require('express');
+const express = require('express');
+const path = require('path');
 var router = express.Router();
 
 /* Utility Methods */
@@ -11,39 +12,33 @@ var access_token, userid, playlistid;
 var login_url = "http://localhost:8888/login/";
 
 /* Database */
-var mongoose = require('mongoose');
-var User = require('./models/user');
-var Cache = require('./models/cache');
+var User = require('../models/user');
+var Cache = require('../models/cache');
 var Song = Cache.Song;
 var Playlist = Cache.Playlist;
-var database_ref = 'mongodb://localhost/findtune'
 
-/* Database Instances */
+
+/* Database Instances -- Use cache instead with mongoose */
 var user;
 var playlist;
 var queue;
 
-
-// check if connection exits?
-mongoose.connect(database_ref, { useNewUrlParser: true }); // test database
-
-mongoose.connection.once('open', function() {
-    console.log("Connection made with MongoDB database.");
-}).on('error', function(error) {
-    console.log('Connection error: ', error);	
-});
-
 router.use((req,res,next) => {
-    if (req.query.access_token) {
-        access_token = req.query.access_token;
-    } else if (!access_token) {
+    if (!access_token) {
         console.log("redirect");
-        res.redirect(login_url);
+        res.redirect(login_url); // TODO: return here after
     }
+
     next();
 });
 
 router.get('/', (req, res) => {
+    if (req.query.access_token) {
+        access_token = req.query.access_token;
+    } else {
+        // next(new Error)
+    }
+
     var prof_options = {
         url: 'https://api.spotify.com/v1/me',
         headers: { 'Authorization': 'Bearer ' + access_token },
@@ -53,6 +48,7 @@ router.get('/', (req, res) => {
     // get the user profile and see if they exist in database
     request.get(prof_options, function(error, response, body) {
         if (!error && response.statusCode === 200) {
+            // set USER cookie, or keep it on the front end with refresh token...
             User.findOne({userid:body.id}).then(function(record) {
                 if (!record) {
                     user = new User({
@@ -100,7 +96,7 @@ router.get('/', (req, res) => {
         }
     });
 
-    res.sendFile(__dirname + '/public/play.html');
+    res.sendFile(path.join(__dirname, '/public/play.html'));
     // face api should get camera access
 });
 
