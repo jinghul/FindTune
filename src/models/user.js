@@ -12,7 +12,6 @@ const UserSchema = new Schema({
     name: String, // user name, required
     userid : String, // user id from Spotify, required
     playlistid : String, // custom playlists for our app
-    premium : Boolean,
     preferences : [PreferenceSchema] // preference array based on category
 });
 

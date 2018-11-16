@@ -3,105 +3,91 @@ const path = require('path');
 var router = express.Router();
 
 /* Utility Methods */
-var request = require('request');
-var cors = require('cors');
-var querystring = require('querystring');
+const request = require('request');
+const cors = require('cors');
+const querystring = require('querystring');
 
 /* Load Access Variables */
-var access_token, userid, playlistid;
-var login_url = "http://localhost:8888/login/";
+const auth_redirect_key = "auth_redirect_uri"
+const login_url = "http://localhost:8888/login/";
 
 /* Database */
-var User = require('../models/user');
-var Cache = require('../models/cache');
-var Song = Cache.Song;
-var Playlist = Cache.Playlist;
+const User = require('../models/user');
+const Cache = require('../models/cache');
+const Song = Cache.Song;
+const Playlist = Cache.Playlist;
+var refresh_token = require('./auth').refresh_token;
 
-
-/* Database Instances -- Use cache instead with mongoose */
-var user;
-var playlist;
-var queue;
-
-router.use((req,res,next) => {
-    if (!access_token) {
-        console.log("redirect");
-        res.redirect(login_url); // TODO: return here after
+/* refresh token on each call */
+router.use(refresh_token, (req, res, next) => {
+    if (req.err) {
+        // most likely access_token expired, redirect to login
+        console.log("*** ERROR: NEEDS NEW ACCESS TOKEN ***")
+        req.session.auth_redirect_key = '../play';
+        res.redirect(login_url);
+    } else {
+        console.log("SUCCESS: REDIRECTED AND GOT ACCESS");
+        next();
     }
-
-    next();
 });
 
-router.get('/', (req, res) => {
-    if (req.query.access_token) {
-        access_token = req.query.access_token;
-    } else {
-        // next(new Error)
+router.get('/', async (req, res) => {
+    // return res.sendFile(path.join(__dirname, '../public/play.html'));
+    var playlistid;
+    var user;
+
+    try {
+        await User.findOne({userid:req.session.userid}).then(function(found) {
+            if (!found) {
+                user = new User({
+                    name : body.display_name, 
+                    userid : body.id,
+                    preferences : []
+                });
+            } else {
+                user = found;
+                playlistid = user.playlistid;
+            }
+        });
+
+        var playlistid = await verify_playlist(req.session.userid, playlistid);
+        user.playlistid = playlistid;
+
+        // DEBUG
+        console.log(playlistid);
+        user.save();
+    } catch (error) {
+        next(error);
+    }
+    
+    res.sendFile(path.join(__dirname, '/public/play.html'));
+});
+
+function verify_playlist(userid, playlistid) {
+    if (!playlistid) {
+        return create_playlist;
     }
 
-    var prof_options = {
-        url: 'https://api.spotify.com/v1/me',
+    var verify_playlist_options = {
+        url : 'https://api.spotify.com/v1/playlists/' + playlistid + '/',
         headers: { 'Authorization': 'Bearer ' + access_token },
         json: true
-    };
-    
-    // get the user profile and see if they exist in database
-    request.get(prof_options, function(error, response, body) {
-        if (!error && response.statusCode === 200) {
-            // set USER cookie, or keep it on the front end with refresh token...
-            User.findOne({userid:body.id}).then(function(record) {
-                if (!record) {
-                    user = new User({
-                        name : body.display_name, 
-                        userid : body.id,
-                        premium : body.product === "premium",
-                        preferences : []
-                    });
-                    user.save();
+    }
 
-                    userid = body.id;
-                } else {
-                    user = record;
-                    user.premium = body.product === "premium";
-                    userid = user.userid;
-                    playlistid = user.playlistid;
-                    user.save();
-                }
-            }).then(() => {
-                /* verify playlist or create playlist, then load the queue */
-                if (playlistid) {
-                    var check_playlist_options = {
-                        url : 'https://api.spotify.com/v1/playlists/' + playlistid + '/',
-                        headers: { 'Authorization': 'Bearer ' + access_token },
-                        json: true
-                    }
-
-                    request.get(check_playlist_options, (error, response, body) => {
-                        if (error || response.statusCode != 200) {
-                            Playlist.findOneAndDelete({playlistid : playlistid});
-                            create_playlist(user);
-                        } else {
-                            Playlist.findOne({playlistid : playlistid}).then(function(record) {
-                                playlist = record;
-                                queue = record.queue; 
-                            });
-                        }
-                    });
-                } else {
-                    create_playlist(user);
-                }
-            });
+    request.get(verify_playlist_options, (error, response, body) => {
+        if (error || response.statusCode != 200) {
+            Playlist.findOneAndDelete({playlistid : playlistid});
+            create_playlist(userid, playlistid);
         } else {
-            res.send(response).end();
+            Playlist.findOne({playlistid : playlistid}).then(function(record) {
+                playlist = record;
+                queue = record.queue; 
+            });
         }
     });
+}
 
-    res.sendFile(path.join(__dirname, '/public/play.html'));
-    // face api should get camera access
-});
-
-var create_playlist = function(user) {
-    // create playlist
+function create_playlist(userid) {
     var create_playlist_options = {
         url : 'https://api.spotify.com/v1/users/' + userid + '/playlists',
         headers: { 'Authorization': 'Bearer ' + access_token },
@@ -112,16 +98,17 @@ var create_playlist = function(user) {
         }
     }
 
-    request.post(create_playlist_options, (error, response, body) => {
-        user.playlistid = body.id;
-        user.save();
-        playlist = new Playlist({
-            playlistid : body.id,
-            songs : [],
-            queue : []
+    return new Promise((resolve, reject) => {
+        request.post(create_playlist_options, (error, response, body) => {
+            // if not error and statusCOde!!!
+            playlist = new Playlist({
+                playlistid : body.id,
+                songs : [],
+                queue : []
+            });
+            playlist.save();
         });
-        playlist.save();
-    });
+    })
 }
 
 router.post('/skip', (req, res) => {
