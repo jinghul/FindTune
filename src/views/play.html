@@ -15,8 +15,8 @@
         window.onload = function() {
             var skip_button = document.getElementById('skip_button');
             skip_button.onclick = () => {
-                $.post('http://localhost:8888/play/skip/', function(res) {
-                    document.getElementById('skip_response').innerHTML = JSON.stringify(res);
+                $.post('http://localhost:8888/play/init/', function(data,textStatus,jqXHR) {
+                    document.getElementById('skip_response').innerHTML = JSON.stringify({"data" : data, "textStatus" : textStatus, "jqXHR" : jqXHR});
                 });
             };
         }

@@ -112,7 +112,6 @@ function get_profile(access_token) {
                     name : body.display_name, 
                     id : body.id,
                 }
-
                 resolve(user_profile);
             } else {
                 reject(error);
@@ -144,6 +143,7 @@ function refresh_token(req, res, next) {
 
     request.post(refresh_options, function(error, response, body) {
         if (!error && response.statusCode === 200) {
+            console.log("SUCCESFULLY REFRESHED ACCESS TOKEN");
             req.session.access_token = body.access_token;
         } else {
             req.err = error;

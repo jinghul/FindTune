@@ -29,7 +29,6 @@ app.use(express.static(path.join(__dirname, '/public')));
 app.use(session({
     genid: (req) => {
         // Generates new sessionID if it is not matched.
-        console.log(req.sessionID);
         return utils.generateRandomString(16);
     },
     store : new MongoStore({mongooseConnection : mongoose.connection}), // or use a new connection

@@ -13,4 +13,47 @@ var generateRandomString = function(length) {
     return text;
 };
 
+/**
+ * Return a random subset of elements from the list.
+ * @param  {Array} array The length of the string.
+ * @param  {Integer} count The number of elements to return.
+ * @return {Array} The subset of random elements from the list.
+ */
+function getRandomElements(array, count) {
+    if (count == 0) {
+        return []
+    } else if (count >= array.length) {
+        return shuffleArray(array);
+    }
+
+    random_elements = [];
+    taken = [];
+    while (count) {
+        var random = Math.floor(Math.random() * array.length);
+        if (!taken.includes(random)) {
+            taken.push(random);
+            random_elements.push(array[random]);
+            count--;
+        }
+    }
+
+    return random_elements;
+}
+
+/**
+ * Shuffles the given array in place.
+ * @param {Array} array 
+ */
+function shuffleArray(array) {
+    var return_array = array.slice();
+    for (let i = return_array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [return_array[i], return_array[j]] = [return_array[j], return_array[i]];
+    }
+    return return_array;
+}
+
+
 module.exports.generateRandomString = generateRandomString;
+module.exports.getRandomElements = getRandomElements;
+module.exports.shuffleArray = shuffleArray;
