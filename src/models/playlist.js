@@ -3,9 +3,8 @@ const Schema = mongoose.Schema;
 
 const SongSchema = new Schema({
     name : {type : String, required : true}, // name of the song
-    songid : {type : String, required : true}, // songID from Spotify, required
-    artistid : String, // artistID
-    categoryid : String, // categoryID, mapped from PreferenceSchema, required
+    id : {type : String, required : true}, // songID from Spotify, required
+    uri : {type : String, required : true}, // song uri for playback
 });
 
 const PlaylistSchema = new Schema({

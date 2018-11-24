@@ -5,6 +5,14 @@
  * of our domain when an user first comes to our app.
  */
 
+/**
+ * Get access + refresh token and pass to client side for them to ask for
+ * refreshes every 50 min on their timer. Then let the client call our server
+ * for recommendations and next song to return from the queue -- so store song name, uri, artist, and image uri
+ * for it to display and play.
+ * Can implement hisotry later to go back/queue display on the side
+ */
+
 var express = require('express');
 var router = express.Router();
 
@@ -120,37 +128,4 @@ function get_profile(access_token) {
     });
 }
 
-function refresh_token(req, res, next) {
-    // requesting access token from refresh token
-    var refresh_token = req.session.refresh_token;
-
-    if (!refresh_token) {
-        req.err = "NO TOKEN";
-        return next();
-    }
-
-    var refresh_options = {
-        url: 'https://accounts.spotify.com/api/token',
-        headers: {
-            'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
-        },
-        form: {
-            grant_type: 'refresh_token',
-            refresh_token: refresh_token
-        },
-        json: true
-    };
-
-    request.post(refresh_options, function(error, response, body) {
-        if (!error && response.statusCode === 200) {
-            console.log("SUCCESFULLY REFRESHED ACCESS TOKEN");
-            req.session.access_token = body.access_token;
-        } else {
-            req.err = error;
-        }
-        return next();
-    });
-}
-
-module.exports.Router = router;
-module.exports.refresh_token = refresh_token;
+module.exports = router;

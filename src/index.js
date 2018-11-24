@@ -1,6 +1,7 @@
 /* Import express modules and routes */
 const express = require('express');
-const auth = require('./routes/auth').Router;
+const auth = require('./routes/auth');
+const token = require('./routes/token');
 const play = require('./routes/play');
 
 /* Utility Modules*/
@@ -12,14 +13,7 @@ const secret_key = require('../keys.json').session_secret;
 
 /* Database Initialization */
 const mongoose = require('mongoose');
-const database = 'mongodb://localhost/findtune';
-
-mongoose.connect(database, { useNewUrlParser: true });
-mongoose.connection.once('open', function() {
-    console.log("Connection made with MongoDB database.");
-}).on('error', function(error) {
-    console.log('Connection error: ', error);	
-});
+require('./database'); // connect to database
 
 /* Node Server and Routes Initialization */
 var app = express();
@@ -42,6 +36,7 @@ app.use(session({
 
 // Routes
 app.use('/login', auth)
+   .use('/token', token)
    .use('/play', play);
     //.use(face)
 

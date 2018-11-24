@@ -1,10 +1,9 @@
 const mongoose = require('mongoose');
+const database = 'mongodb://localhost/findtune';
 
-// connect to mongodb
-mongoose.connect('mongodb://localhost/test'); // test database
-
+mongoose.connect(database, { useNewUrlParser: true, useFindAndModify: false });
 mongoose.connection.once('open', function() {
-    console.log('Connection has been made...');
+    console.log("Connection made with MongoDB database.");
 }).on('error', function(error) {
-    console.log('Connection error: ', error);
+    console.log('Connection error: ', error);	
 });

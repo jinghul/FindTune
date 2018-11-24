@@ -14,9 +14,12 @@
     <script>
         window.onload = function() {
             var skip_button = document.getElementById('skip_button');
-            skip_button.onclick = () => {
-                $.post('http://localhost:8888/play/init/', function(data,textStatus,jqXHR) {
+            skip_button.onclick = async () => {
+                await $.post('http://localhost:8888/play/init/', function(data,textStatus,jqXHR) {
                     document.getElementById('skip_response').innerHTML = JSON.stringify({"data" : data, "textStatus" : textStatus, "jqXHR" : jqXHR});
+                });
+                $.post('http://localhost:8888/play/next/', function(data, textStatus, jqXHR) {
+                    document.getElementById('skip_response').innerHTML += JSON.stringify({"data" : data, "textStatus" : textStatus, "jqXHR" : jqXHR});
                 });
             };
         }

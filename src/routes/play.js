@@ -4,8 +4,9 @@ var router = express.Router();
 
 /* Utility Methods */
 const request = require('request');
-const cors = require('cors');
 const querystring = require('querystring');
+const bodyParser = require('body-parser');
+const jsonParser = bodyParser.json()
 const utils = require('../utils');
 
 /* Load Access Variables */
@@ -14,33 +15,21 @@ const login_url = "http://localhost:8888/login/";
 /* Database */
 const User = require('../models/user');
 const Playlist = require('../models/playlist');
-// var Genres;
+const genres = require('../resources/genres.json').genres;
 
 /* Spotify */
 const MAX_SEED_LENGTH = 5;
-var refresh_token = require('./auth').refresh_token;
-
-// loadGenres();
-// function loadGenres() {
-//     try {
-
-//     } catch (...) {
-
-//     }
-// }
+const MAX_QUEUE_LENGTH = 10;
+const MIN_QUEUE_LENGTH = 5;
 
 /* refresh token on each call */
-router.use(refresh_token, (req, res, next) => {
-    if (req.err) {
-        // most likely access_token expired, redirect to login
-        console.log("*** ERROR: NEEDS NEW ACCESS TOKEN ***")
-
+router.use((req, res, next) => {
+    if (!req.session.userid || !req.session.access_token) {
         // TODO: Query params of redirect instead of cookie
         req.session.auth_redirect_key = '../play';
         res.redirect(login_url);
     } else {
-        console.log("SUCCESS: REDIRECTED AND GOT ACCESS");
-        next();
+        return next();
     }
 });
 
@@ -48,87 +37,83 @@ router.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../views/play.html'));
 });
 
-router.post('/init', async (req, res, next) => {
-    if (!req.session.userid) {
-        return next("User is not logged in.");
-    }
+router.post('/init', 
+    verify_user, 
+    verify_playlist, 
+    create_playlist, 
+    create_playlist_record);
 
-    try {
-        var user;
-        var playlist_uid;
-        var playlistid = req.session.playlistid;
-        await User.findOne({id:req.session.userid}).then(function(found) {
-            if (!found) {
-                user = new User({
-                    name : req.session.user_name, 
-                    id : req.session.userid,
-                    preferences : []
-                });
-            } else {
-                user = found;
-                playlist_uid = user.playlist_uid;
-            }
-        });
-
-        var verified_playlist = await verify_playlist(req.session.userid, playlistid, playlist_uid, req.session.access_token);
-        req.session.playlistid = verified_playlist.id;
-
-        if (playlist_uid != verified_playlist.uid) {
-            user.playlist_uid = verified_playlist.uid;
+function verify_user(req, res, next) {
+    var query = req.session.user_uid ? {_id : req.session.user_uid} : {id : req.session.userid}
+    User.findOne(query).then(function(user) {
+        if (!user) {
+            user = new User({
+                name : req.session.user_name, 
+                id : req.session.userid,
+                preferences : []
+            });
             user.save();
-        } else {
-            console.log("PLAYLIST MATCHES USER");
         }
 
-        // DEBUG
-        console.log(playlistid);
-        // await get_recommendations();
-        res.status(200).send("OK");
-    } catch (error) {
-        return next(error);
-    }
-});
+        req.session.user_uid = user._id;
+        req.session.playlist_uid = user.playlist_uid;
+        next();
+    }).catch(next);
+}
 
-function verify_playlist(userid, playlistid, playlist_uid, access_token) {
-    if (!playlist_uid) {
+async function verify_playlist(req, res, next) {
+    console.log("VERIFY_PLAYLIST: " + req.session.playlistid +" " + req.session.playlist_uid);
+    if (!req.session.playlist_uid) {
         /* User has no associated playlist. */
         console.log("NO ASSOCIATED PLAYLIST RECORD");
-        return create_playlist(userid, access_token);
+        delete req.session.playlist_uid;
+        return next();
+    } else {
+        var playlist = await Playlist.findOne({_id : req.session.playlist_uid});
+        if (playlist === null) {
+            console.log("NO ASSOCIATED PLAYLIST RECORD");
+            delete req.session.playlist_uid;
+            return next();
+        }
+        req.session.playlistid = playlist.id;
+        console.log("PLAYLISTID: " + req.session.playlistid);
     }
 
     var verify_playlist_options = {
-        url : 'https://api.spotify.com/v1/playlists/' + playlistid + '/',
-        headers: { 'Authorization': 'Bearer ' + access_token },
+        url : 'https://api.spotify.com/v1/playlists/' + req.session.playlistid + '/',
+        headers: { 'Authorization': 'Bearer ' + req.session.access_token },
         json: true
     };
 
-    return new Promise((resolve, reject) => {
-        request.get(verify_playlist_options, (error, response, body) => {
-            if (!error && response.statusCode == 200) {
-                Playlist.findOne({_id : playlist_uid, id : playlistid}).then(function(found) {
-                    if (found) {
-                        console.log("FOUND ACTIVE PLAYLIST and CORRESPONDING RECORD");
-                        resolve({
-                            uid : found._id,
-                            id : found.id
-                        });
-                    } else {
-                        console.log("ACTIVE PLAYLIST BUT NO RECORD, creating...");
-                        resolve(create_playlist_record(playlistid));
-                    }
-                });
-            } else {
-                Playlist.findOneAndDelete({_id : playlist_uid});
-                resolve(create_playlist(userid, access_token));
-            }
-        });
+    request.get(verify_playlist_options, (error, response, body) => {
+        if (!error && response.statusCode == 200) {
+            Playlist.findOne({_id : req.session.playlist_uid}).then(function(playlist) {
+                if (playlist != null && playlist.id === req.session.playlistid) {
+                    console.log("FOUND ACTIVE PLAYLIST and CORRESPONDING RECORD");
+                    res.status(200).end();
+                } else {
+                    console.log("ACTIVE PLAYLIST BUT NO RECORD, creating...");
+                    next();
+                }
+            });
+        } else {
+            console.log(response.statusCode + " " + response.statusMessage);
+            Playlist.findOneAndDelete({_id : req.session.playlist_uid});
+            delete req.session.playlistid;
+            delete req.session.playlist_uid;
+            next();
+        }
     });
 }
 
-function create_playlist(userid, access_token) {
+function create_playlist(req, res, next) {
+    if (req.session.playlistid != undefined) {
+        return next();
+    }
+
     var create_playlist_options = {
-        url : 'https://api.spotify.com/v1/users/' + userid + '/playlists',
-        headers: { 'Authorization': 'Bearer ' + access_token },
+        url : 'https://api.spotify.com/v1/users/' + req.session.userid + '/playlists',
+        headers: { 'Authorization': 'Bearer ' + req.session.access_token },
         json: {
             "name" : "FindTune",
             "description" : "Your face built this playlist.",
@@ -137,134 +122,193 @@ function create_playlist(userid, access_token) {
     }
 
     console.log("CREATING PLAYLIST IN SPOTIFY");
-    return new Promise((resolve, reject) => {
-        request.post(create_playlist_options, async (error, response, body) => {
-            if (!error && response.statusCode == 201) {
-                resolve(create_playlist_record(body.id));
-            } else {
-                console.log(error + " " + response.statusCode + " " + response.statusMessage);
-                reject(error);
-            }
-        });
-    })
-}
-
-function create_playlist_record(playlistid) {
-    console.log("CREATING PLAYLIST " + playlistid + " RECORD");
-    return new Promise((resolve, reject) => {
-        var playlist = new Playlist({
-            id : playlistid,
-            songs : [],
-            queue : []
-        });
-
-        playlist.save().then(() => {
-            resolve({
-                uid : playlist._id,
-                id : playlistid
-            });
-        }).catch(() => {
-            reject("Error saving playlist to MongoDB.");
-        });
+    request.post(create_playlist_options, async (error, response, body) => {
+        if (!error && response.statusCode == 201) {
+            req.session.playlistid = body.id;
+            next();
+        } else {
+            // TODO: past playlist moved
+            next(error);
+        }
     });
 }
 
-async function get_recommendations() {
-    var seeds = await get_random_seeds();
+function create_playlist_record(req, res, next) {
+    if (req.session.playlist_uid != undefined) {
+        return next();
+    }
+
+    console.log("CREATING PLAYLIST " + req.session.playlistid + " RECORD");
+    var playlist = new Playlist({
+        id : req.session.playlistid,
+        songs : [],
+        queue : []
+    });
+
+    playlist.save().then(() => {
+        User.findOneAndUpdate({_id: req.session.user_uid}, {$set : {playlist_uid : playlist._id}});
+        req.session.playlist_uid = playlist._id;
+        res.status(200).end();
+    }).catch(() => {
+        next("Error saving playlist to MongoDB.");
+    });
+}
+
+async function get_recommendations(req, res, next) {
+    console.log("GETTING RECOMMENDATIONS");
+    var num_of_recs = 0;
+
+    try {
+        var user = await User.findOne({_id: req.session.user_uid});
+        if (!user) {
+            return next("User has no corresponding record - log in or refresh.");
+        } else if (user.preferences === undefined) {
+            user.preferences = [];
+            user.save();
+        }
+
+        var playlist = await Playlist.findOne({_id : req.session.playlist_uid});
+        if (playlist.queue === undefined) {
+            playlist.queue = [];
+            playlist.save();
+        }
+        
+        if (playlist.queue.length < MIN_QUEUE_LENGTH) {
+            num_of_recs = MAX_QUEUE_LENGTH - playlist.queue.length;
+        } else {
+            return next();
+        }
+    } catch (error) {
+        return next(error);
+    }
+
+    // Use existing preferences if they exist, otherwise random genres.
+    var seeds = "";
+    var seed_list;
+    var seed_tracks = "seed_tracks="
+    var seed_artists = "seed_artists=";
+    var seed_genres = "seed_genres="
+
+    if (user.preferences.length <= MAX_SEED_LENGTH) {
+        var random_genres = await get_random_genres(MAX_SEED_LENGTH - user.preferences.length);
+        for (var i = 0; i < random_genres.length; i++) {
+            seed_genres += random_genres[i] + "%2C";
+        }
+
+        console.log(random_genres);
+        seed_list = user.preferences;
+    } else {
+        seed_List = utils.getRandomElements(user.preferences, MAX_SEED_LENGTH);
+    }
+
+    for (var seed in seed_list) {
+        if (seed.type == "artist") {
+            seed_artists += seed.id + "%2C";
+        } else if (seed.type == "genre") {
+            seed_genres += seed.id + "%2C";
+        } else if (seed.type == "track") {
+            seed_tracks += seed.id + "%2C";
+        }
+    }
+
+    if (seed_tracks == "seed_tracks=") {
+        seed_tracks = "";
+    } else {
+        seed_tracks = seed_tracks.slice(0, seeds.length - 3) + "&";
+    }
+    if (seed_artists == "seed_artists=") {
+        seed_artists = "";
+    } else {
+        seed_artists = seed_artists.slice(0, seeds.length - 3) + "&";
+    }
+    if (seed_genres == "seed_genres=") {
+        seed_genres = "";
+    } else {
+        seed_genres = seed_genres.slice(0, seeds.length - 3) + "&";
+    }
+
+    console.log("seeds: " + seed_artists + seed_genres + "min_popularity=50");
+    seeds = seed_artists + seed_genres + "&min_popularity=50";
+
     var recommendation_options = {
-        url : 'https://api.spotify.com/v1/recommendations?limit=5&' + encodeURIComponent(seeds),
+        url : 'https://api.spotify.com/v1/recommendations?limit=' + num_of_recs + '&' + seeds,
         headers : {'Authorization' : 'Bearer ' + req.session.access_token},
         json : true
     }
-}
 
-async function get_random_seeds() {
-    User.findOne({id: req.session.userid}).then(function(user) {
-        // Existing preferences exist
-        var seeds = "";
-        var seed_list;
-        var seed_artists = "seed_artists=";
-        var seed_genres = "seed_genres="
-
-        if (user.preferences.length <= MAX_SEED_LENGTH) {
-            seed_genres += get_random_genres(MAX_SEED_LENGTH - user.preferences.length);
-            seed_list = user.preferences;
+    request.get(recommendation_options, (error, response, body) => {
+        if (!error && response.statusCode == 200) {
+            console.log(body.tracks.length);
+            Playlist.findOneAndUpdate({_id : user.playlist_uid}, {$push : {queue : {$each : body.tracks}}}).then(() => {   
+                console.log("FINISHED GETTING RECOMMENDATIONS");
+                next();
+            }).catch(next);
         } else {
-            seed_List = utils.getRandomElements(user.preferences, MAX_SEED_LENGTH);
+            next(error);
         }
-
-        for (var seed in seed_list) {
-            if (seed.type == "artist") {
-                seed_artists += seed.id + ","
-            } else if (seed.type == "genre") {
-                seed_genres += seed.id + ","
-            }
-            // TODO: Track
-        }
-
-        if (seed_artists == "seed_artists=") {
-            seed_artists = "";
-        } else {
-            seed_artists = seed_artists.slice(0, seeds.length - 1);
-        }
-        if (seed_genres == "seed_genres=") {
-            seed_genres = "";
-        } else {
-            seed_genres = seed_genres.slice(0, seeds.length - 1);
-        }
-
-        return seed_artists + "&" + seed_genres;
     });
 }
 
-async function get_random_genres(count) {
+function get_random_genres(count) {
     if (count == 0) {
-        return;
+        return [];
     }
-
-    var cached_genres = await Cache.findOne({name : "Genre"});
-    if (!cached_genres) {
-        var get_genres_options = {
-            url : "https://api.spotify.com/v1/recommendations/available-genre-seeds",
-            headers : {'Authorization' : 'Bearer ' + req.session.access_token},
-            json : true
-        }
-    
-        request.get(get_genres_options, (err, response, body) => {
-            if (!error && response.statusCode == 200) {
-                Cache.insertOne({
-                    name : "Genre",
-                    data : body.genres
-                });
-                return utils.getRandomElements(body.genres, count);
-            }
-        });
-    } else {
-        return utils.getRandomElements(cached_genres.data, count);
-    }
+    return utils.getRandomElements(genres, count);
 }
 
-router.post('/skip', (req, res) => {
+router.post('/next', get_recommendations, (req, res, next) => {
     // get next playlist in queue
-    var skip_song_options = {
-        url : 'https://api.spotify.com/v1/me/player/next/',
-        headers: {'Authorization' : 'Bearer ' + req.session.access_token },
+    Playlist.findOne({_id : req.session.playlist_uid}).then((playlist) => {
+        var next_song = playlist.queue[0];
+        console.log(next_song);
+        playlist.queue.shift();
+        playlist.save();
+        res.send(next_song);
+    }).catch(next);
+});
+
+router.post('/like', jsonParser, (req, res) => {
+    // like song and save to playlist, also get recommendations and add to queue
+    var track = req.body.track;
+    var new_preferences = [];
+
+    var add_track_options = {
+        url : "https://api.spotify.com/v1/playlists/" + req.session.playlistid + "/tracks?" +
+            querystring.stringify({
+                uris : track.uri
+            }),
+        headers : {'Authorization' : 'Bearer ' + req.session.access_token},
         json : true
     }
 
-    request.post(skip_song_options, (error, response, body) => {
-        res.json(response).end();
+    request.post(add_track_options, (error, response, body) => {
+        if (error || response.statusCode != 201) {
+            // failed to add song to playlist...
+            next(err);
+        }
     });
 
+    new_preferences.push({
+        name : track.name,
+        id : track.id,
+        type : "track"
+    }, {
+        name : track.artist.name,
+        id : track.artist.id,
+        type : "artist"
+    }, {
+        name : track.genre.name,
+        id : track.genre.id,
+        type : "genre"
+    });
+
+    User.findOneAndUpdate({_id : req.session.user_uid}, {$push : {$each : {preferences : new_preferences}}})
 });
 
-router.post('/like', (req, res) => {
-    // like song and save to playlist, also get recommendations and add to queue
-
-});
-
-router.post('/refresh', (req, res) => {
-    access_token = req.query.access_token;
+// TODO: Error handler
+router.use(function (err, req, res, next) {
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
 });
 
 module.exports = router;
