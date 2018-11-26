@@ -9,7 +9,8 @@ const path = require('path');
 const utils = require('./utils');
 const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
-const secret_key = require('../keys.json').session_secret;
+const config = require('./config');
+const secret_key = config.keys.session_secret;
 
 /* Database Initialization */
 const mongoose = require('mongoose');
@@ -17,7 +18,7 @@ require('./database'); // connect to database
 
 /* Node Server and Routes Initialization */
 var app = express();
-app.use(express.static(path.join(__dirname, '/public')));
+app.use(express.static(path.join(__dirname, '../dist/')));
 
 // Sessions
 app.use(session({
@@ -40,7 +41,6 @@ app.use('/login', auth)
    .use('/play', play);
     //.use(face)
 
-const port = process.env.PORT || 8888;
-app.listen(port, () => {
-    console.log('Listening on port ' + port + '...');
+app.listen(config.app.port, () => {
+    console.log('Listening on port ' + config.app.port + '...');
 });

@@ -9,8 +9,10 @@ const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json()
 const utils = require('../utils');
 
-/* Load Access Variables */
-const login_url = "http://localhost:8888/login/";
+/* Load Access Variables */ 
+const config = require('../config');
+const login_url = config.app.index() + '/login';
+const play_url = config.app.index() + '/play';
 
 /* Database */
 const User = require('../models/user');
@@ -24,17 +26,19 @@ const MIN_QUEUE_LENGTH = 5;
 
 /* refresh token on each call */
 router.use((req, res, next) => {
-    if (!req.session.userid || !req.session.access_token) {
-        // TODO: Query params of redirect instead of cookie
-        req.session.auth_redirect_key = '../play';
-        res.redirect(login_url);
+    if (!req.session.userid) {
+        if (req.path == '/') {
+            res.redirect(login_url + '?' + querystring.stringify({auth_redirect_uri : play_url}));
+        } else {
+            res.status(401).send('User not logged in.');
+        }
     } else {
-        return next();
+        next();
     }
 });
 
 router.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../views/play.html'));
+    res.sendFile(path.join(__dirname, '../../dist/play.html'));
 });
 
 router.post('/init', 
@@ -62,7 +66,7 @@ function verify_user(req, res, next) {
 }
 
 async function verify_playlist(req, res, next) {
-    console.log("VERIFY_PLAYLIST: " + req.session.playlistid +" " + req.session.playlist_uid);
+    console.log("VERIFY_PLAYLIST: " + req.session.playlistid + " " + req.session.playlist_uid);
     if (!req.session.playlist_uid) {
         /* User has no associated playlist. */
         console.log("NO ASSOCIATED PLAYLIST RECORD");
@@ -96,6 +100,9 @@ async function verify_playlist(req, res, next) {
                     next();
                 }
             });
+        } else if (response.statusCode == 401) {
+            // Unauthorized, needs login again
+            res.status(401).send('User access expired or not logged in.');
         } else {
             console.log(response.statusCode + " " + response.statusMessage);
             Playlist.findOneAndDelete({_id : req.session.playlist_uid});
@@ -126,6 +133,8 @@ function create_playlist(req, res, next) {
         if (!error && response.statusCode == 201) {
             req.session.playlistid = body.id;
             next();
+        } else if (response.statusCode == 401) {
+            res.status(401).send('User access expired or not logged in.');
         } else {
             // TODO: past playlist moved
             next(error);
@@ -305,7 +314,7 @@ router.post('/like', jsonParser, (req, res) => {
     User.findOneAndUpdate({_id : req.session.user_uid}, {$push : {$each : {preferences : new_preferences}}})
 });
 
-// TODO: Error handler
+// TODO: Error handler to error page.
 router.use(function (err, req, res, next) {
     console.error(err.stack);
     res.status(500).send('Something broke!');

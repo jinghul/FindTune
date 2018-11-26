@@ -2,14 +2,16 @@ const express = require('express');
 var router = express.Router();
 
 /* Utils */
+const config = require('../config');
 const request = require('request');
 
 router.use((req, res, next) => {
     // requesting access token from refresh token
     var refresh_token = req.session.refresh_token;
-    if (refresh_token === undefined) {
-        req.session.auth_redirect_key = '../play';
-        res.redirect('../login');
+    if (!req.session.userid || !refresh_token) {
+        // TODO: use query params
+        req.session.auth_redirect = config.app.index() + '/play';
+        res.redirect(config.app.index() + '/login');
     }
 
     var refresh_options = {
@@ -29,8 +31,9 @@ router.use((req, res, next) => {
             req.session.access_token = body.access_token;
             next();
         } else {
-            req.session.auth_redirect_key = '../play';
-            res.redirect('../login');
+            // TODO: Query params for redirect
+            req.session.auth_redirect = config.app.index() + '/play';
+            res.redirect(config.app.index() + '/login');
         }
     });
 });

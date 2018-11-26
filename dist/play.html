@@ -15,12 +15,15 @@
         window.onload = function() {
             var skip_button = document.getElementById('skip_button');
             skip_button.onclick = async () => {
-                await $.post('http://localhost:8888/play/init/', function(data,textStatus,jqXHR) {
+                $.post('http://localhost:8888/play/init/', function(data,textStatus,jqXHR) {
                     document.getElementById('skip_response').innerHTML = JSON.stringify({"data" : data, "textStatus" : textStatus, "jqXHR" : jqXHR});
+                }).fail((jqXHR, textStatus, errorThrown) => {
+                    console.log("FAIL");
+                    window.location.replace('http://localhost:8888/login?auth_redirect_uri=' + window.location.href);
                 });
-                $.post('http://localhost:8888/play/next/', function(data, textStatus, jqXHR) {
-                    document.getElementById('skip_response').innerHTML += JSON.stringify({"data" : data, "textStatus" : textStatus, "jqXHR" : jqXHR});
-                });
+                // $.post('http://localhost:8888/play/next/', function(data, textStatus, jqXHR) {
+                //     document.getElementById('skip_response').innerHTML += JSON.stringify({"data" : data, "textStatus" : textStatus, "jqXHR" : jqXHR});
+                // });
             };
         }
     </script>

@@ -24,14 +24,15 @@ var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
 
 /* Load Auth Variables */
-const keys = require("../../keys.json");
+const config = require('../config');
+const keys = config.keys;
 const client_id = keys.spotify.client;
 const client_secret = keys.spotify.secret;
-const default_redirect_uri = 'http://localhost:8888/login/callback/';
-const auth_redirect_key = "auth_redirect_uri"
+const spotify_redirect_uri = config.app.index() + '/login/callback/';
 
 /* Spotify Client Permission Variables */
 const stateKey = 'spotify_auth_state';
+const auth_redirect_key = 'auth_redirect_uri';
 const scope = 'user-top-read user-modify-playback-state user-read-private playlist-modify-public playlist-modify-private';
 
 router.use(cors())
@@ -39,25 +40,28 @@ router.use(cors())
 
 
 router.get('/', function(req, res, next) {
+    console.log('authorizing!!');
     var state = utils.generateRandomString(16);
 
     // on the index page when user clicks login or from another page,
     // get current window location and redirect to it after
     res.cookie(stateKey, state);
+    res.cookie(auth_redirect_key, req.query.auth_redirect_uri);
 
     // your application requests authorization
+    console.log('redirecting to spotify auth');
     res.redirect('https://accounts.spotify.com/authorize?' +
         querystring.stringify({
             response_type: 'code',
             client_id: client_id,
             scope: scope,
-            redirect_uri: default_redirect_uri,
+            redirect_uri: spotify_redirect_uri,
             state: state
         }));
 });
 
 router.get('/callback', function(req, res, next) {
-
+    console.log('authorize callback');
     // application requests refresh and access tokens
     // after checking the state parameter
 
@@ -74,7 +78,7 @@ router.get('/callback', function(req, res, next) {
         url: 'https://accounts.spotify.com/api/token',
         form: {
             code: code,
-            redirect_uri: default_redirect_uri,
+            redirect_uri: spotify_redirect_uri,
             grant_type: 'authorization_code'
         },
         headers: {
@@ -93,12 +97,12 @@ router.get('/callback', function(req, res, next) {
                 req.session.user_name = user_profile.name;
                 req.session.userid = user_profile.id;
             } catch(error) {
-                next(error);
+                return next(error);
             }
 
-            var auth_redirect_uri = req.session.auth_redirect_key ? req.session.auth_redirect_key : 'http://localhost:8888';
-            delete req.session.auth_redirect_key;
-            res.redirect(auth_redirect_uri);
+            var auth_redirect_uri = (req.cookies && req.cookies[auth_redirect_key]) ? req.cookies[auth_redirect_key] : config.app.index();
+            res.clearCookie(auth_redirect_key);
+            res.redirect(decodeURIComponent(auth_redirect_uri));
         } else {
             next("ERROR: Invalid Token\n" + error);
         }
