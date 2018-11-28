@@ -5,14 +5,44 @@
     <meta charset='utf-8'>
     <link rel="stylesheet" href="main.css" type="text/css" media="all">
     <script type='text/javascript'>
-        var main_image;
+        var first = "f1";
+        var second = "s2";
     </script>
-    <script src="capture.js">
+    <script type='text/javascript' src="capture.js">
+    //I think it only runs the src script then skips to the next instruction
+    //code doesnt run here
     </script>
 </head>
 <body>
-    
-    <script type='text/javascript' src='router.js'></script>
+
+
+    <script type='text/javascript'>
+        var third = "t3";
+        //local storage gets updated every second
+
+        console.log(first);
+        third = localStorage.getItem('facepicphoto');
+        //the cookie cannot store the the full string of the photo data
+        //due to memory limitations
+        document.cookie = "data1 = " + first;
+    </script>
+
+    <script type='text/javascript'>
+    //attempting to store data directly to server using xmlhttprequest
+    var xhr = new XMLHttpRequest();
+    var formData = new FormData();
+    formData.append("image", third);
+    formData.append("text", first);
+  //  xhr.open('POST', 'http://127.0.0.1:3000', true);
+  //  xhr.send(first);
+    //try to see if it will work on router
+  //  xhr.open('POST', 'http://127.0.0.1:3000/router/test', true);
+  //  xhr.send(formData);
+    //sending these variables didnt work
+    //xhr.send(first);
+    //xhr.send(third);
+    //console.log('FormData ', formData);
+    </script>
     <div class="contentarea">
         <h1>
             MDN - WebRTC: Still photo capture demo
@@ -32,5 +62,13 @@
             Visit our article <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Taking_still_photos"> Taking still photos with WebRTC</a> to learn more about the technologies used here.
         </p>
     </div>
+    <script type='text/javascript'>
+        //cookie testing
+        first = localStorage.getItem('facepicdata');
+        second = localStorage.getItem('facepicphoto');
+        //console.log(first);
+        document.cookie = "end = " + first;
+        document.cookie = "seCend = " + second;
+    </script>
 </body>
 </html>

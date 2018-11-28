@@ -1,11 +1,20 @@
 'use strict';
 
-const request = require('request');
+//var request = require('request');
 var express = require('express');
+var cookieParser = require('cookie-parser')
+var bodyParser = require('body-parser');
+var path = require("path");
+var LocalStorage = require('node-localstorage').LocalStorage;
+var localStorage = new LocalStorage('./scratch');
+var fs = require('fs');
+var store = require('store');
 var router = express.Router();
+var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+var xhr = new XMLHttpRequest();
 
 // Replace <Subscription Key> with your valid subscription key.
-const subscriptionKey = 'fb9d8e70bc9d4254ab821bfa7b090b82';
+const subscriptionKey = 'KEY GOES HERE';
 
 // You must use the same location in your REST call as you used to get your
 // subscription keys. For example, if you got your subscription keys from
@@ -40,38 +49,98 @@ const options = {
 //make global sting to write to
 var jsonResponse = "EMPTY";
 
-/*
-request.post(options, (error, response, body) => {
-    if (error) {
-        console.log('Error: ', error);
-        return;
-    }
-    // I took a 'let' out here
-    jsonResponse = JSON.stringify(JSON.parse(body), null, '  ');
-    console.log('JSON Response\n');
-    console.log(jsonResponse);
-});
-*/
-
 // middleware that is specific to this router
 router.use(function timeLog(req, res, next) {
     console.log('Time: ', Date.now())
     next()
 })
+
+//cookie reader initialize on router
+router.use(cookieParser());
+//initialize body parser
+router.use(bodyParser.urlencoded({
+  extended: true
+}));
+
+
 // define the home page route
 router.get('/', function (req, res) {
-    res.send('Birds home page')
-    console.log('bird Time: ', Date.now())
+    console.log('main route Time: ', Date.now())
+    res.sendFile(path.join(__dirname + '/helper.html'));
+  res.end();
 })
+//route to print all cookies
+router.get('/cook', function(req, res) {
+  res.write('cookies page');
+  //need buffer ? res.write(req.cookies);
+  console.log('Cookies: ', req.cookies);
+  res.end();
+})
+//testroute
+router.get('/test', function (req, res) {
+  //res.sendFile(path.join(__dirname + '/index.html'));
+//  res.sendFile(__dirname + '/index.html');
+  /*var form = req.form;
+
+    form.encoding = 'binary';
+    form.uploadDir = __dirname + '/scratch';
+    form.maxFieldsSize = 50 * 1024 * 1024;
+    form.keepExtensions = true;
+
+    form.parse(req, function(err, fields, files) {
+
+        if (err) return console.log(err);
+
+    }); */
+    console.log('router bodycheck', req.body);
+    var thirdD = req.body.thirdData;
+    var firstD = req.body.firstData;
+
+    //more testing
+    console.log('route first data', firstD);
+    console.log('route third data', thirdD);
+    //try savinf the image
+    //var buf = new Buffer.from(firstD, 'base64');
+  //  fs.writeFile('firstImg.png', buf);
+
+})
+router.post("/test", function (req, res) {
+
+//  xhr.open('POST', 'http://127.0.0.1:3000/router/test', true);
+
+//  xhr.responseType = 'text';
+  //var body = xhr.getAllResponseHeaders();
+  var text = (req.get('text'));
+
+    console.log('express router bodycheck ', req.body);
+    console.log('AJAX router bodycheck', body);
+    console.log('AJAX router responseText', text);
+});
 // define the about route
 router.get('/about', function (req, res) {
-    res.send('About birds')
-    var photo;
+    res.send('About birds send response')
 
-    photo = document.getElementById('photo');
+    // Attempts to get image from local storage
+    //myStorage = window.localStorage;
+    // var A = localStorage.getItem('facepicdata');
+    // console.log('aval ',A);
+    //
+    // var B = store.get('jj');
+    // console.log('bval ',B);
+    //
+    // var C = req.get('jj');
+    // console.log('cval ',C);
 
-    main_image;
-    photo.setAttribute('src', data);
+
+    //get cookie by key
+    console.log('D ', req.cookies.jj);
+
+    fs.writeFile('fsTest.txt', 'about writing files', function (err) {
+    if (err) throw err;
+    console.log('about console!');
+     res.end();
+  });
+    res.end();
 })
 
 router.get('/face', function (req, res) {
