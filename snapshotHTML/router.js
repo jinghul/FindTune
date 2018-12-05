@@ -1,6 +1,7 @@
 'use strict';
 
 //var request = require('request');
+const http = require('http'); //this is a croe module , you'd have to insall express
 var express = require('express');
 var cookieParser = require('cookie-parser')
 var bodyParser = require('body-parser');
@@ -74,6 +75,8 @@ router.get('/cook', function(req, res) {
   res.write('cookies page');
   //need buffer ? res.write(req.cookies);
   console.log('Cookies: ', req.cookies);
+    var buf = new Buffer.from(req.cookies.end, 'base64');
+    fs.writeFile('firstImg.png', buf);
   res.end();
 })
 //testroute
@@ -102,19 +105,19 @@ router.get('/test', function (req, res) {
     //try savinf the image
     //var buf = new Buffer.from(firstD, 'base64');
   //  fs.writeFile('firstImg.png', buf);
-
+    res.end();
 })
 router.post("/test", function (req, res) {
 
-//  xhr.open('POST', 'http://127.0.0.1:3000/router/test', true);
+  xhr.open('POST', 'http://127.0.0.1:3000/router/test', true);
 
-//  xhr.responseType = 'text';
-  //var body = xhr.getAllResponseHeaders();
+  xhr.responseType = 'text';
+  var body = xhr.getAllResponseHeaders();
   var text = (req.get('text'));
 
     console.log('express router bodycheck ', req.body);
-    console.log('AJAX router bodycheck', body);
     console.log('AJAX router responseText', text);
+    res.end();
 });
 // define the about route
 router.get('/about', function (req, res) {

@@ -5,7 +5,7 @@
   // calculated based on the aspect ratio of the input stream.
 
   var width = 320;    // We will scale the photo width to this
-  var height = 0;     // This will be computed based on the input stream
+  var height = 150;     // This will be computed based on the input stream
 
   // |streaming| indicates whether or not we're currently streaming
   // video from the camera. Obviously, we start at false.
@@ -18,14 +18,15 @@
 
   var video = null;
   var canvas = null;
-  var photo = null;
+  let photo = null;
   var startbutton = null;
+  var running = true;
 
   function startup() {
     video = document.getElementById('video');
     canvas = document.getElementById('canvas');
     photo = document.getElementById('photo');
-    startbutton = document.getElementById('startbutton');
+    //startbutton = document.getElementById('startbutton');
 
     //some of the navigator functions were outdated in the skeleton code
 
@@ -71,13 +72,10 @@
       }
     }, false);
 
-    startbutton.addEventListener('click', function(ev){
-      takepicture();
-      ev.preventDefault();
-    }, false);
+      //every second take a pictcure
+      //its in var stopcondition becasue setinterval wont stop on its own
+      var stopCondition = setInterval(takepicture, 3000);
 
-    //every second take a pictcure
-    setInterval(takepicture, 1000);
 
     clearphoto();
   }
@@ -107,44 +105,57 @@
       canvas.height = height;
       context.drawImage(video, 0, 0, width, height);
 
-      //take whats onthe canvas then convert it to string data
+        //get photo element so it can be rewritten by new data
+        photo = document.getElementById('photo');
+
+      //take whats on the canvas then convert it to base 64 string data
       var data = canvas.toDataURL('image/png');
         photo.setAttribute('src', data);
 
-        //strips away the object type and leaves only the data
+        //strips away the object type at the front and leaves only the actual data as a string
         var strip = data.replace(/^data:image\/\w+;base64,/, "");
 
         //attempting to keep the snapshot in locAL STorage in browser
         //this did write to localStorage but I could not get the server to read from it
         localStorage.setItem('facepicdata', strip);
 
-        localStorage.setItem('facepicphoto', photo);
-        localStorage.setItem('facepiccanvas', canvas);
+        //I may have to set the reqheader to multipart/form data
+        //Instantiate the objects needed to send form data
+        const xhr = new XMLHttpRequest();
+        const fd = new FormData();
 
-        var xhr = new XMLHttpRequest();
+        //Ready the post request
+        xhr.open('POST', 'http://127.0.0.1:3000/upload', true);
 
-        //xhr.open('POST', 'http://127.0.0.1:3000', true);
-        //xhr.send(strip);
-        //try to see if it will work on router
-        xhr.open('POST', 'http://127.0.0.1:3000/router/test', true);
-        xhr.setRequestHeader('text', strip);
-        xhr.send();
+            //the blob parameter is the blob of the object
+        //this code chunk may not be useful
+        const blobby = canvas.toBlob(function(blob) {
+            var newImg = document.createElement('img'),
+                url = URL.createObjectURL(blob);
 
-        //I want to have data passed from here immeadiately to router
-        //first = data;
-        //second = data;
-         //third = data;
+            newImg.onload = function() {
+                // no longer need to read the blob so it's revoked
+                URL.revokeObjectURL(url);
+            };
 
-        first = localStorage.getItem('facepicdata');
+            newImg.src = url;
+          // document.body.appendChild(newImg);
+        });
 
-        //testing statement
-        console.log('reads from browser console');
-        //console.log('FormData info ', formData);
+        //append base 64 string
+        fd.append('strip', strip);
 
-        //trying to get the data to write somewhere
-        //these dont seem to work
-        //var fs = require('fs');
-        //fs.writeFile('writeit.txt', data);
+        //append photo element
+        var photo = document.getElementById('photo');
+        fd.append('photo', photo);
+
+        //this part is just a simple string to test that formdata is working
+        fd.append('username', 'Chris');
+        var farm = fd.get('username');
+        console.log('farm data ', farm);
+
+        //pushes formdata to the server in a post request
+        xhr.send(fd);
 
     } else {
       clearphoto();
