@@ -25,10 +25,9 @@ var cookieParser = require('cookie-parser');
 
 /* Load Auth Variables */
 const config = require('../config');
-const keys = config.keys;
-const client_id = keys.spotify.client;
-const client_secret = keys.spotify.secret;
-const spotify_redirect_uri = config.app.index() + '/login/callback/';
+const index_uri = config.app.index();
+const {spotify : {client_id, client_secret}} = config.keys;
+const spotify_redirect_uri = index_uri + '/login/callback/';
 
 /* Spotify Client Permission Variables */
 const stateKey = 'spotify_auth_state';
@@ -100,7 +99,7 @@ router.get('/callback', function(req, res, next) {
                 return next(error);
             }
 
-            var auth_redirect_uri = (req.cookies && req.cookies[auth_redirect_key]) ? req.cookies[auth_redirect_key] : config.app.index();
+            var auth_redirect_uri = (req.cookies && req.cookies[auth_redirect_key]) ? req.cookies[auth_redirect_key] : index_uri;
             res.clearCookie(auth_redirect_key);
             res.redirect(decodeURIComponent(auth_redirect_uri));
         } else {

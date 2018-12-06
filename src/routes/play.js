@@ -10,9 +10,9 @@ const jsonParser = bodyParser.json()
 const utils = require('../utils');
 
 /* Load Access Variables */ 
-const config = require('../config');
-const login_url = config.app.index() + '/login';
-const play_url = config.app.index() + '/play';
+const index_uri = require('../config').app.index();
+const login_url = index_uri + '/login';
+const play_url = index_uri + '/play';
 
 /* Database */
 const User = require('../models/user');

@@ -2,7 +2,7 @@ const express = require('express');
 var router = express.Router();
 
 /* Utils */
-const config = require('../config');
+const index_uri = require('../config').app.index();
 const request = require('request');
 
 router.use((req, res, next) => {
@@ -10,8 +10,8 @@ router.use((req, res, next) => {
     var refresh_token = req.session.refresh_token;
     if (!req.session.userid || !refresh_token) {
         // TODO: use query params
-        req.session.auth_redirect = config.app.index() + '/play';
-        res.redirect(config.app.index() + '/login');
+        req.session.auth_redirect = index_uri + '/play';
+        res.redirect(index_uri + '/login');
     }
 
     var refresh_options = {
@@ -32,8 +32,8 @@ router.use((req, res, next) => {
             next();
         } else {
             // TODO: Query params for redirect
-            req.session.auth_redirect = config.app.index() + '/play';
-            res.redirect(config.app.index() + '/login');
+            req.session.auth_redirect = index_uri + '/play';
+            res.redirect(index_uri + '/login');
         }
     });
 });
