@@ -7,6 +7,7 @@ const play = require('./routes/play');
 /* Utility Modules*/
 const path = require('path');
 const utils = require('./utils');
+const helmet = require('helmet');
 const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const config = require('./config');
@@ -18,6 +19,7 @@ require('./database'); // connect to database
 
 /* Node Server and Routes Initialization */
 var app = express();
+app.use(helmet());
 app.use(express.static(path.join(__dirname, '../dist/')));
 
 // Sessions

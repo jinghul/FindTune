@@ -1,0 +1,39 @@
+@font-face {
+    font-family: Roboto;
+    src: url(../assets/fonts/roboto-v18-latin-regular.woff2);
+}
+
+.absolute {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    padding: 20px;
+}
+
+.navbar {
+    background-color: transparent;
+    border: none;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+}
+
+.container-fluid > ul.navbar-nav > li > a {
+    color: #000;
+    font-size: 20px;
+    font-weight: bold;
+    font-family: Roboto, sans-serif;
+}
+
+.navbar-brand > a:hover, .navbar-brand > a  {
+    text-decoration: none;
+}
+
+.container-fluid > ul.navbar-nav > li > a:hover {
+    font-weight: bold;
+    color: #fff;
+}

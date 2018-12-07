@@ -5,7 +5,7 @@ const keys = require('../keys.json');
 const production = {
     app: {
         // TODO: check that the port is working in production urls.
-        host: 'host',
+        host: 'localhost',
         port : 8888 || process.env.PORT,
         index: function() {return 'http://' + this.host}
     },

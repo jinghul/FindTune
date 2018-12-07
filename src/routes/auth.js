@@ -26,7 +26,7 @@ var cookieParser = require('cookie-parser');
 /* Load Auth Variables */
 const config = require('../config');
 const index_uri = config.app.index();
-const {spotify : {client_id, client_secret}} = config.keys;
+const {spotify : {client_id, secret}} = config.keys;
 const spotify_redirect_uri = index_uri + '/login/callback/';
 
 /* Spotify Client Permission Variables */
@@ -45,7 +45,7 @@ router.get('/', function(req, res, next) {
     // on the index page when user clicks login or from another page,
     // get current window location and redirect to it after
     res.cookie(stateKey, state);
-    res.cookie(auth_redirect_key, req.query.auth_redirect_uri);
+    res.cookie(auth_redirect_key, (req.query.auth_redirect_uri) ? req.query.auth_redirect_uri : index_uri);
 
     // your application requests authorization
     console.log('redirecting to spotify auth');
@@ -81,7 +81,7 @@ router.get('/callback', function(req, res, next) {
             grant_type: 'authorization_code'
         },
         headers: {
-            'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+            'Authorization': 'Basic ' + (new Buffer(client_id + ':' + secret).toString('base64'))
         },
         json: true
     };
@@ -100,6 +100,7 @@ router.get('/callback', function(req, res, next) {
             }
 
             var auth_redirect_uri = (req.cookies && req.cookies[auth_redirect_key]) ? req.cookies[auth_redirect_key] : index_uri;
+            console.log(auth_redirect_uri);
             res.clearCookie(auth_redirect_key);
             res.redirect(decodeURIComponent(auth_redirect_uri));
         } else {

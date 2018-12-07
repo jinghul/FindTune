@@ -1,5 +1,6 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const webpack = require("webpack");
 
 module.exports = {
     entry: {
@@ -13,6 +14,18 @@ module.exports = {
     module: {
         rules: [
             {
+                enforce: "pre",
+                test: /\.jsx$/,
+                exclude: [
+                    path.resolve(__dirname, "node_modules"),
+                    path.resolve(__dirname, "src")
+                ],
+                loader: "eslint-loader",
+                options: {
+                    fix: true
+                }
+            },
+            {
                 test: /\.jsx?$/,
                 exclude: path.resolve(__dirname, "node_modules"),
                 loader: "babel-loader"
@@ -22,8 +35,12 @@ module.exports = {
                 use: ["style-loader", "css-loader"]
             },
             {
+                test: /\.(woff|woff2|eot|ttf|svg)$/,
+                loader: "url-loader?limit=100000"
+            },
+            {
                 test: /\.(png|svg|jpg|gif)$/,
-                use: ["file-loader"]
+                use: "file-loader"
             }
         ]
     },
@@ -32,15 +49,22 @@ module.exports = {
             filename: "index.html",
             template: "lib/static/index.html",
             mode: "production",
-            chunks: ['index'],
+            chunks: ["index"],
             minify: true
         }),
         new HtmlWebpackPlugin({
             filename: "play.html",
             template: "lib/static/play.html",
             mode: "production",
-            chunks: ['play'],
+            chunks: ["play"],
             minify: true
-        })
-    ]
+        }),
+        new webpack.HotModuleReplacementPlugin()
+    ],
+    devServer: {
+        contentBase: path.join(__dirname, "dist"),
+        compress: true,
+        hot: true,
+        port: 9000
+    }
 };
