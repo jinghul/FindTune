@@ -2,6 +2,11 @@
     background-color: #fff;
 }
 
+#explore-button, #source-button {
+    font-size: 20px;
+    margin-right:1em;
+}
+
 .container p {
     line-height: 2em;
 }

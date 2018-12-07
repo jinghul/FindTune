@@ -18,7 +18,7 @@ class About extends Component {
                         a new one based on the preferences we see.
                     </p>
                     <p>
-                        <Button bsStyle="primary" id="explore-button">Explore</Button>
+                        <Button bsStyle="primary" id="explore-button">Explore</Button> <span> or </span>
                         <Button bsStyle="link" id="source-button">See the source.</Button>
                     </p>
                 </div>
