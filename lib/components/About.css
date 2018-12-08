@@ -7,6 +7,10 @@
     margin-right:1em;
 }
 
+#paragraph {
+    margin-bottom: 30px;
+}
+
 .container p {
     line-height: 2em;
 }

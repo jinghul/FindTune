@@ -9,7 +9,7 @@ class About extends Component {
             <Jumbotron id="content">
                 <div className="container">
                     <h1>About</h1>
-                    <p>
+                    <p id="paragraph">
                         FindTune is a music exploration application to let you find the right tunes for your taste.
                         We want to show you music that actually fits into your own individual personality.
                         Using the powerful Spotify and Microsoft Azure API, we load in your personal tastes as a first step

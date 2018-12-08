@@ -14,7 +14,7 @@ class Footer extends Component {
                             style={{ marginRight: 10 }}
                             glyph="heart-empty"
                         />
-                        <a href="https://github.com/jinghul/findtune" id="github-link">Github</a>
+                        <a href="https://github.com/jinghul/findtune" id="github-link">Github Repository</a>
                     </div>
                 </div>
             </footer>

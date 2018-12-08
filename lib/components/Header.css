@@ -3,16 +3,6 @@
     src: url(../assets/fonts/roboto-v18-latin-regular.woff2);
 }
 
-.current > a:before {
-    content: "";
-    position: absolute;
-    left: 17.5%;
-    bottom: 0;
-    height: 1px;
-    width: 65%;
-    border-bottom: #000 1px solid;
-}
-
 .absolute {
     position: absolute;
     top: 0;
@@ -32,19 +22,24 @@
     align-items: center;
 }
 
-.container-fluid > ul.navbar-nav > li > a {
+.navbar-collapse > ul.navbar-nav > li > a {
     color: #000;
     font-size: 20px;
     font-weight: 500;
     font-family: Roboto, sans-serif;
 }
 
-.navbar-brand > a:hover,
-.navbar-brand > a {
-    text-decoration: none;
+.navbar-collapse > ul.navbar-nav > li > a:hover::before {
+    content: "";
+    position: absolute;
+    left: 17.5%;
+    bottom: 0;
+    height: 1px;
+    width: 65%;
+    border-bottom: #fff 1px solid;
 }
 
-.container-fluid > ul.navbar-nav > li > a:hover {
+.navbar-collapse > ul.navbar-nav > li > a:hover, .navbar-collapse > ul.navbar-nav > li.current > a {
     font-weight: bold;
     color: #fff;
 }
