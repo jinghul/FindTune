@@ -1,7 +1,6 @@
 /* Import express modules and routes */
 const express = require('express');
 const auth = require('./routes/auth');
-const token = require('./routes/token');
 const play = require('./routes/play');
 
 /* Utility Modules*/

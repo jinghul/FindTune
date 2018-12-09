@@ -26,37 +26,42 @@ var cookieParser = require('cookie-parser');
 /* Load Auth Variables */
 const config = require('../config');
 const index_uri = config.app.index();
-const {spotify : {client_id, secret}} = config.keys;
+const {
+    spotify: { client_id, secret },
+} = config.keys;
 const spotify_redirect_uri = index_uri + '/login/callback/';
 
 /* Spotify Client Permission Variables */
 const stateKey = 'spotify_auth_state';
 const auth_redirect_key = 'auth_redirect_uri';
-const scope = 'user-top-read user-modify-playback-state user-read-private playlist-modify-public playlist-modify-private';
+const scope = 'streaming user-read-birthdate user-read-email user-top-read user-modify-playback-state user-read-private playlist-modify-public playlist-modify-private';
 
-router.use(cors())
-      .use(cookieParser());
+router.use(cors()).use(cookieParser());
 
-
-router.get('/', function(req, res, next) {
+router.get('/', function(req, res) {
     console.log('authorizing!!');
     var state = utils.generateRandomString(16);
 
     // on the index page when user clicks login or from another page,
     // get current window location and redirect to it after
     res.cookie(stateKey, state);
-    res.cookie(auth_redirect_key, (req.query.auth_redirect_uri) ? req.query.auth_redirect_uri : index_uri);
+    res.cookie(
+        auth_redirect_key,
+        req.query.auth_redirect_uri ? req.query.auth_redirect_uri : index_uri
+    );
 
     // your application requests authorization
     console.log('redirecting to spotify auth');
-    res.redirect('https://accounts.spotify.com/authorize?' +
-        querystring.stringify({
-            response_type: 'code',
-            client_id: client_id,
-            scope: scope,
-            redirect_uri: spotify_redirect_uri,
-            state: state
-        }));
+    res.redirect(
+        'https://accounts.spotify.com/authorize?' +
+            querystring.stringify({
+                response_type: 'code',
+                client_id: client_id,
+                scope: scope,
+                redirect_uri: spotify_redirect_uri,
+                state: state,
+            })
+    );
 });
 
 router.get('/callback', function(req, res, next) {
@@ -69,7 +74,7 @@ router.get('/callback', function(req, res, next) {
     var storedState = req.cookies ? req.cookies[stateKey] : null;
 
     if (state === null || state !== storedState) {
-        return next("ERROR: State Mismatch");
+        return next('ERROR: State Mismatch');
     }
 
     res.clearCookie(stateKey);
@@ -78,12 +83,14 @@ router.get('/callback', function(req, res, next) {
         form: {
             code: code,
             redirect_uri: spotify_redirect_uri,
-            grant_type: 'authorization_code'
+            grant_type: 'authorization_code',
         },
         headers: {
-            'Authorization': 'Basic ' + (new Buffer(client_id + ':' + secret).toString('base64'))
+            Authorization:
+                'Basic ' +
+                new Buffer(client_id + ':' + secret).toString('base64'),
         },
-        json: true
+        json: true,
     };
 
     request.post(authOptions, async function(error, response, body) {
@@ -95,16 +102,19 @@ router.get('/callback', function(req, res, next) {
                 var user_profile = await get_profile(body.access_token);
                 req.session.user_name = user_profile.name;
                 req.session.userid = user_profile.id;
-            } catch(error) {
+            } catch (error) {
                 return next(error);
             }
 
-            var auth_redirect_uri = (req.cookies && req.cookies[auth_redirect_key]) ? req.cookies[auth_redirect_key] : index_uri;
+            var auth_redirect_uri =
+                req.cookies && req.cookies[auth_redirect_key]
+                    ? req.cookies[auth_redirect_key]
+                    : index_uri;
             console.log(auth_redirect_uri);
             res.clearCookie(auth_redirect_key);
             res.redirect(decodeURIComponent(auth_redirect_uri));
         } else {
-            next("ERROR: Invalid Token\n" + error);
+            next('ERROR: Invalid Token\n' + error);
         }
     });
 });
@@ -112,8 +122,8 @@ router.get('/callback', function(req, res, next) {
 function get_profile(access_token) {
     var prof_options = {
         url: 'https://api.spotify.com/v1/me',
-        headers: { 'Authorization': 'Bearer ' + access_token },
-        json: true
+        headers: { Authorization: 'Bearer ' + access_token },
+        json: true,
     };
 
     // caught in wrapper function
@@ -121,15 +131,64 @@ function get_profile(access_token) {
         request.get(prof_options, (error, response, body) => {
             if (!error && response.statusCode == 200) {
                 var user_profile = {
-                    name : body.display_name, 
-                    id : body.id,
-                }
+                    name: body.display_name,
+                    id: body.id,
+                };
                 resolve(user_profile);
             } else {
                 reject(error);
             }
         });
     });
+}
+
+router.get('/refresh', (req, res) => {
+    // requesting access token from refresh token
+    var refresh_token = req.session.refresh_token;
+    if (!req.session.userid || !refresh_token) {
+        // TODO: use query params
+        req.session.auth_redirect = index_uri + '/play';
+        res.redirect(index_uri + '/login');
+    }
+
+    var refresh_options = {
+        url: 'https://accounts.spotify.com/api/token',
+        headers: {
+            Authorization:
+                'Basic ' +
+                new Buffer(client_id + ':' + secret).toString('base64'),
+        },
+        form: {
+            grant_type: 'refresh_token',
+            refresh_token: refresh_token,
+        },
+        json: true,
+    };
+
+    request.post(refresh_options, function(error, response, body) {
+        if (!error && response.statusCode === 200) {
+            req.session.access_token = body.access_token;
+            res.send(body.access_token);
+        } else {
+            res.status(401).send('User does not have authentication');
+        }
+    });
+});
+
+router.get('/token', check_login, (req, res) => {
+    res.json({ access_token: req.session.access_token }).end();
+});
+
+router.get('/name', check_login, (req, res) => {
+    res.send(req.session.user_name).end();
+});
+
+function check_login(req, res, next) {
+    if (!req.session.userid || !req.session.access_token) {
+        res.status(401).send('User not logged in.');
+    } else {
+        next();
+    }
 }
 
 module.exports = router;

@@ -1,13 +1,12 @@
-import React, { Component } from "react";
+import React, { Component } from 'react';
 
-import "./Splash.css";
+import './Splash.css';
+
+// TODO: Title Header and scroll down
 
 class Splash extends Component {
     render() {
-        return (
-            <div id="splash">
-            </div>
-        );
+        return <div id="splash" />;
     }
 }
 
