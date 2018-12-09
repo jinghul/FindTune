@@ -20,7 +20,7 @@ class SongDisplay extends Component {
         const isPlaying = this.props.isPlaying;
 
         let mainButton;
-        if (isPlaying) {
+        if (!isPlaying) {
             mainButton = (
                 <a onClick={this.props.onPlay}>
                     <Glyphicon glyph="play" />
@@ -28,7 +28,7 @@ class SongDisplay extends Component {
             );
         } else {
             mainButton = (
-                <a onClick={this.props.onPause}>
+                <a className='shadow' onClick={this.props.onPause}>
                     <Glyphicon glyph="pause" />
                 </a>
             );
@@ -36,15 +36,15 @@ class SongDisplay extends Component {
 
         return (
             <div className="mx-auto w-50 h-75">
-                <Image src={this.props.songAlbumImg} />
-                <div>
+                <Image className="shadow" src={this.props.songAlbumImg} height="200px" width="200px"/>
+                <div id="song-info">
                     <span>{this.props.songName}</span>
-                    <span>{this.props.songArtists}</span>
+                    <span>{this.props.songArtists.map(artist => artist.name).toString()}</span>
                 </div>
                 <div>
                     <a
                         onClick={this.props.onBack}
-                        className={this.props.canGoBack ? '' : 'disabled'}
+                        className={this.props.canGoBack ? 'shadow' : 'shadow disabled'}
                         role="button"
                     >
                         <Glyphicon glyph="step-backward" />
@@ -52,7 +52,7 @@ class SongDisplay extends Component {
 
                     {mainButton}
 
-                    <a onClick={this.props.onNext} role="button">
+                    <a className='shadow' onClick={this.props.onNext} role="button">
                         <Glyphicon glyph="step-forward" />
                     </a>
                 </div>

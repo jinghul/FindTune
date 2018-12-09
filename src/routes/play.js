@@ -10,6 +10,7 @@ const querystring = require('querystring');
 const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();
 const utils = require('../utils');
+const HOUR_MS = 3600000;
 
 /* Load Access Variables */
 const index_uri = require('../config').app.index();
@@ -27,7 +28,7 @@ const NUM_RETURN_RECS = 10;
 
 /* refresh token on each call */
 router.use((req, res, next) => {
-    if (!req.session.userid) {
+    if (!req.session.userid || utils.compareTime(new Date(), req.session.last_auth, HOUR_MS)) {
         if (req.path == '/') {
             res.redirect(
                 login_url +
@@ -35,20 +36,20 @@ router.use((req, res, next) => {
                     querystring.stringify({ auth_redirect_uri: play_url })
             );
         } else {
-            res.status(401).send('User not logged in.');
+            res.status(401).send('User session expired or not logged in.');
         }
     } else {
         next();
     }
 });
 
-router.get('/', (req, res) => {
+router.get('/',  (req, res) => {
     res.sendFile(path.join(__dirname, '../../dist/play.html'));
 });
 
 router.use('/init', init);
 
-router.get('/recommend', (req, res, next) => {
+router.get('/recommend', async (req, res, next) => {
     console.log('GETTING RECOMMENDATIONS');
 
     try {
@@ -63,7 +64,7 @@ router.get('/recommend', (req, res, next) => {
     }
 
     // Use existing preferences if they exist, otherwise random genres.
-    var seeds, seed_list;
+    var seed_list;
     var seed_tracks = '',
         seed_artists = '',
         seed_genres = '';
@@ -84,32 +85,47 @@ router.get('/recommend', (req, res, next) => {
         seed_list = utils.getRandomElements(user.preferences, MAX_SEED_LENGTH);
     }
 
-    for (var seed in seed_list) {
-        if (seed.type == 'artist') {
+
+    seed_list.forEach(seed => {
+        console.log(seed);
+        if (seed.type === 'artist') {
             seed_artists += seed.id + '%2C';
-        } else if (seed.type == 'genre') {
+        } else if (seed.type === 'genre') {
             seed_genres += seed.id + '%2C';
-        } else if (seed.type == 'track') {
+        } else if (seed.type === 'track') {
             seed_tracks += seed.id + '%2C';
         }
-    }
+    });
+
+    console.log('tracks' + seed_tracks);
 
     seed_tracks =
         seed_tracks === ''
             ? ''
-            : 'seed_tracks=' + seed_tracks.slice(0, seeds.length - 3) + '&';
+            : 'seed_tracks=' +
+              seed_tracks.slice(0, seed_tracks.length - 3) +
+              '&';
     seed_artists =
         seed_artists === ''
             ? ''
-            : 'seed_artists=' + seed_artists.slice(0, seeds.length - 3) + '&';
+            : 'seed_artists=' +
+              seed_artists.slice(0, seed_artists.length - 3) +
+              '&';
     seed_genres =
         seed_genres === ''
             ? ''
-            : 'seed_genres=' + seed_genres.slice(0, seeds.length - 3) + '&';
+            : 'seed_genres=' +
+              seed_genres.slice(0, seed_genres.length - 3) +
+              '&';
 
-    console.log('seeds: ' + seed_artists + seed_genres + 'min_popularity=50');
-    seeds = seed_tracks + seed_artists + seed_genres + '&min_popularity=50';
-
+    console.log(
+        'seeds: ' +
+            seed_tracks +
+            seed_artists +
+            seed_genres +
+            '&min_popularity=50'
+    );
+    var seeds = seed_tracks + seed_artists + seed_genres + '&min_popularity=50';
     var recommendation_options = {
         url:
             'https://api.spotify.com/v1/recommendations?limit=' +
@@ -123,9 +139,7 @@ router.get('/recommend', (req, res, next) => {
     request.get(recommendation_options, (error, response, body) => {
         if (!error && response.statusCode == 200) {
             res.json({
-                track_ids: body.tracks.map(track => ({
-                    id: track.id,
-                })),
+                track_ids: body.tracks.map(track => track.id),
             });
         } else {
             next(error);
@@ -172,7 +186,6 @@ router.post('/dislike', jsonParser, req => {
     );
 });
 
-// TODO: Error handler to error page.
 // eslint-disable-next-line no-unused-vars
 router.use(function(err, req, res, next) {
     console.error(err.stack);

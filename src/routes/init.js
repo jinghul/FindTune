@@ -42,23 +42,24 @@ async function verify_user(req, res, next) {
 
 function initPreferences(user, access_token) {
     var get_top_options = {
-        url:
-            'https://api.spotify.com/v1/me/top/tracks',
+        url: 'https://api.spotify.com/v1/me/top/tracks',
         headers: { Authorization: 'Bearer ' + access_token },
         json: true,
     };
 
     request.get(get_top_options, (error, response, body) => {
         if (!error && response.statusCode == 200) {
-            body.items.foreach(item => (user.preferences.push({
-                name : item.name,
-                id : item.id,
-                type : 'track'
-            })));
+            body.items.forEach(item =>
+                user.preferences.push({
+                    name: item.name,
+                    id: item.id,
+                    type: 'track',
+                })
+            );
+            user.save();
         }
     });
 }
-
 
 async function verify_playlist(req, res, next) {
     console.log(
@@ -157,7 +158,7 @@ function create_playlist(req, res, next) {
 
 function create_playlist_record(req, res, next) {
     if (req.session.playlist_uid != undefined) {
-        return next();
+        return res.status(200).end();
     }
 
     console.log('CREATING PLAYLIST ' + req.session.playlistid + ' RECORD');
@@ -172,11 +173,14 @@ function create_playlist_record(req, res, next) {
             User.findOneAndUpdate(
                 { _id: req.session.user_uid },
                 { $set: { playlist_uid: playlist._id } }
-            );
-            req.session.playlist_uid = playlist._id;
-            res.status(200).end();
+            ).then(() => {
+                req.session.playlist_uid = playlist._id;
+                res.status(200).end();
+            });
         })
         .catch(() => {
             next('Error saving playlist to MongoDB.');
         });
 }
+
+module.exports = router;

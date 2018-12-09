@@ -34,7 +34,8 @@ const spotify_redirect_uri = index_uri + '/login/callback/';
 /* Spotify Client Permission Variables */
 const stateKey = 'spotify_auth_state';
 const auth_redirect_key = 'auth_redirect_uri';
-const scope = 'streaming user-read-birthdate user-read-email user-top-read user-modify-playback-state user-read-private playlist-modify-public playlist-modify-private';
+const scope =
+    'streaming user-read-birthdate user-read-email user-top-read user-modify-playback-state user-read-private playlist-modify-public playlist-modify-private';
 
 router.use(cors()).use(cookieParser());
 
@@ -106,6 +107,8 @@ router.get('/callback', function(req, res, next) {
                 return next(error);
             }
 
+            req.session.last_auth = Date.now();
+
             var auth_redirect_uri =
                 req.cookies && req.cookies[auth_redirect_key]
                     ? req.cookies[auth_redirect_key]
@@ -146,9 +149,7 @@ router.get('/refresh', (req, res) => {
     // requesting access token from refresh token
     var refresh_token = req.session.refresh_token;
     if (!req.session.userid || !refresh_token) {
-        // TODO: use query params
-        req.session.auth_redirect = index_uri + '/play';
-        res.redirect(index_uri + '/login');
+        res.status(401).send('User not logged in or session expired.');
     }
 
     var refresh_options = {
@@ -168,7 +169,7 @@ router.get('/refresh', (req, res) => {
     request.post(refresh_options, function(error, response, body) {
         if (!error && response.statusCode === 200) {
             req.session.access_token = body.access_token;
-            res.send(body.access_token);
+            res.json({ access_token: body.access_token });
         } else {
             res.status(401).send('User does not have authentication');
         }

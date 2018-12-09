@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
-import { Image, Jumbotron } from 'react-bootstrap';
+import { Jumbotron } from 'react-bootstrap';
 import { BounceLoader } from 'react-spinners';
 
 import SongDisplay from './SongDisplay.jsx';
-import StartIcon from '../assets/start-button.svg';
+import StartIcon from '../assets/start-button.png';
 
 const MIN_QUEUE_SIZE = 5;
 const MAX_BACKSTACK_SIZE = 10;
+
+import './Controller.css';
 
 class Controller extends Component {
     state = {
@@ -27,12 +29,14 @@ class Controller extends Component {
 
     componentDidMount() {
         // Insert the spotify player callback
-        fetch(process.env.INDEX_URL + '/auth/token/', {
+        fetch(process.env.INDEX_URL + '/login/refresh', {
             credentials: 'include',
         }).then(response => {
             if (response.status === 401) {
                 this.handleUnauthorized();
                 return;
+            } else if (response.status !== 200) {
+                this.handleError();
             }
 
             response.json().then(json => {
@@ -42,12 +46,12 @@ class Controller extends Component {
                 document.body.appendChild(script);
 
                 window.onSpotifyWebPlaybackSDKReady = () => {
-                    this.token = json.access_token;
+                    this.access_token = json.access_token;
                     // eslint-disable-next-line no-undef
                     this.player = new Spotify.Player({
                         name: 'FindTune Player',
                         getOAuthToken: cb => {
-                            cb(this.token);
+                            cb(this.access_token);
                         },
                     });
 
@@ -93,9 +97,10 @@ class Controller extends Component {
                 };
             });
 
-            fetch(process.env.INDEX_URL + '/play/init/', {
+            fetch(process.env.INDEX_URL + '/play/init', {
                 credentials: 'include',
             }).then(() => {
+                console.log(response);
                 if (response.status === 401) {
                     this.handleUnauthorized();
                     return;
@@ -103,6 +108,7 @@ class Controller extends Component {
 
                 this.timerID = setInterval(() => this.tick(), 3000000);
                 this.getRecommendations().then(songs => {
+                    console.log(songs);
                     this.setState({
                         loading: false,
                         song: songs[0],
@@ -121,7 +127,7 @@ class Controller extends Component {
     }
 
     tick = () => {
-        fetch(process.env.INDEX_URL + '/auth/refresh/', {
+        fetch(process.env.INDEX_URL + '/auth/refresh', {
             credentials: 'include',
         })
             .then(response => {
@@ -129,13 +135,16 @@ class Controller extends Component {
                     this.handleUnauthorized();
                     return;
                 }
-                this.access_token = response;
+
+                response.json().then(json => {
+                    this.access_token = json.access_token;
+                });
             })
             .catch(this.handleError);
     };
 
     getSongInfo = songId => {
-        return fetch(`https://api.spotify.com/v1/tracks/${songId}`, {
+        return fetch('https://api.spotify.com/v1/tracks/' + songId, {
             headers: {
                 'Content-Type': 'application/json; charset=utf-8',
                 Authorization: 'Bearer ' + this.access_token,
@@ -147,16 +156,22 @@ class Controller extends Component {
                     return;
                 }
 
-                response.json().then(json => {
+                return response.json().then(json => {
                     var songInfo = {};
+
                     songInfo.albumImg = json.album.images[0].url; // 640 x 640 album image
                     songInfo.artists = json.artists.map(artist => ({
                         name: artist.name,
                         id: artist.id,
                     }));
-                    fetch(
+
+                    if (!songInfo.artists) {
+                        songInfo.artists = 'Unknown';
+                    }
+
+                    return fetch(
                         `https://api.spotify.com/v1/artists/${
-                            songInfo.artists[0]
+                            songInfo.artists[0].id
                         }`,
                         {
                             headers: {
@@ -166,7 +181,8 @@ class Controller extends Component {
                             },
                         }
                     ).then(response => {
-                        response.json().then(json => {
+                        return response.json().then(json => {
+                            console.log(songInfo);
                             songInfo.genres = json.genres;
                             return songInfo;
                         });
@@ -177,7 +193,7 @@ class Controller extends Component {
     };
 
     getRecommendations = () => {
-        return fetch(process.env.INDEX_URL + '/play/recommend/', {
+        return fetch(process.env.INDEX_URL + '/play/recommend', {
             credentials: 'include',
         })
             .then(response => {
@@ -186,18 +202,22 @@ class Controller extends Component {
                     return;
                 }
 
-                response.json().then(json => {
+                return response.json().then(json => {
                     if (!json || !json.track_ids) {
                         this.handleError();
                         return null;
                     }
 
                     var songPromises = json.track_ids.map(id => {
-                        return this.getSongInfo(id);
+                        return this.getSongInfo(id).then(song => {
+                            console.log(song);
+                            return song;
+                        });
                     });
 
-                    Promise.all(songPromises)
+                    return Promise.all(songPromises)
                         .then(songs => {
+                            console.log(songs);
                             return songs;
                         })
                         .catch(this.handleError);
@@ -208,7 +228,8 @@ class Controller extends Component {
 
     handleUnauthorized = () => {
         fetch(
-            process.env.INDEX_URL + '/auth/?auth_redirect_uri=' +
+            process.env.INDEX_URL +
+                '/login?auth_redirect_uri=' +
                 encodeURIComponent(window.location.href),
             {
                 credentials: 'include',
@@ -292,11 +313,14 @@ class Controller extends Component {
             });
         }
         if (this.backStack.length > MAX_BACKSTACK_SIZE) {
-            this.backStack.splice(0, MAX_BACKSTACK_SIZE - this.backStack.length);
+            this.backStack.splice(
+                0,
+                MAX_BACKSTACK_SIZE - this.backStack.length
+            );
         }
         this.setState({
-            song: nextSong
-        })
+            song: nextSong,
+        });
     };
 
     render() {
@@ -309,7 +333,7 @@ class Controller extends Component {
             display = (
                 <div className="fullscreen">
                     <Jumbotron>
-                        <h1>An error has occured. Please refresh the page.</h1>
+                        <h1>An error has occured. :(</h1>
                     </Jumbotron>
                 </div>
             );
@@ -327,7 +351,7 @@ class Controller extends Component {
         } else if (!started) {
             display = (
                 <a onClick={this.handleStart} role="button">
-                    <Image src={StartIcon} height="25%" width="25%" />
+                    <img src={StartIcon} height="200px" width="200px" />
                 </a>
             );
         } else {

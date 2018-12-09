@@ -47,7 +47,7 @@ module.exports = {
     },
     plugins: [
         new webpack.DefinePlugin({
-            'process.env.HOST': 'http://' + localhost,
+            'process.env.INDEX_URL': JSON.stringify('http://localhost:8888'),
         }),
         new HtmlWebpackPlugin({
             filename: 'index.html',

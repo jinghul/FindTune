@@ -26,8 +26,8 @@ function getRandomElements(array, count) {
         return shuffleArray(array);
     }
 
-    random_elements = [];
-    taken = [];
+    var random_elements = [];
+    var taken = [];
     while (count) {
         var random = Math.floor(Math.random() * array.length);
         if (!taken.includes(random)) {
@@ -53,7 +53,21 @@ function shuffleArray(array) {
     return return_array;
 }
 
+/**
+ * Returns where the difference between
+ * two dates is greater than a number (ms)
+ * @param {Date} date1 
+ * @param {Date} date2 
+ * @param {Number} compare 
+ */
+function compareTime(date1, date2, compare) {
+    if (Math.abs(date2 - date1) > compare) {
+        return true;
+    }
+}
+
 
 module.exports.generateRandomString = generateRandomString;
 module.exports.getRandomElements = getRandomElements;
 module.exports.shuffleArray = shuffleArray;
+module.exports.compareTime = compareTime;

@@ -22,25 +22,25 @@ app.use(helmet());
 app.use(express.static(path.join(__dirname, '../dist/')));
 
 // Sessions
-app.use(session({
-    genid: (req) => {
-        // Generates new sessionID if it is not matched.
-        return utils.generateRandomString(16);
-    },
-    store : new MongoStore({mongooseConnection : mongoose.connection}), // or use a new connection
-    secret : secret_key,
-    resave: false,
-    saveUninitialized: true
-}));
+app.use(
+    session({
+        genid: req => {
+            // Generates new sessionID if it is not matched.
+            return utils.generateRandomString(16);
+        },
+        store: new MongoStore({ mongooseConnection: mongoose.connection }), // or use a new connection
+        secret: secret_key,
+        resave: false,
+        saveUninitialized: true,
+    })
+);
 
 // Index, loads user cookie info ex. name, when visiting play/profile refresh token,
 // if error, invoke login again, and save redirect url to take back to it.
 
 // Routes
-app.use('/login', auth)
-   .use('/token', token)
-   .use('/play', play);
-    //.use(face)
+app.use('/login', auth).use('/play', play);
+//.use(face)
 
 app.listen(config.app.port, () => {
     console.log('Listening on port ' + config.app.port + '...');
