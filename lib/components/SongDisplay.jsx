@@ -6,6 +6,9 @@ import './SongDisplay.css';
 
 class SongDisplay extends Component {
     componentDidMount() {
+        console.log(
+            this.props.songArtists.map(artist => artist.name).toString()
+        );
         this.timerID = setInterval(
             () => this.props.onCheckFace(),
             200000 // 20 Seconds interval
@@ -16,35 +19,55 @@ class SongDisplay extends Component {
         clearInterval(this.timerID);
     }
 
+    getArtistNames = function(artists) {
+        let artist_list = '';
+        artists.forEach(artist => {artist_list += artist.name + ', '});
+        return artist_list.slice(0, artist_list.length - 2)
+    }
+
     render() {
         const isPlaying = this.props.isPlaying;
 
         let mainButton;
         if (!isPlaying) {
             mainButton = (
-                <a onClick={this.props.onPlay}>
+                <a className="main-button controller-button" onClick={this.props.onPlay}>
                     <Glyphicon glyph="play" />
                 </a>
             );
         } else {
             mainButton = (
-                <a className='shadow' onClick={this.props.onPause}>
+                <a className="main-button controller-button" onClick={this.props.onPause}>
                     <Glyphicon glyph="pause" />
                 </a>
             );
         }
 
         return (
-            <div className="mx-auto w-50 h-75">
-                <Image className="shadow" src={this.props.songAlbumImg} height="200px" width="200px"/>
-                <div id="song-info">
-                    <span>{this.props.songName}</span>
-                    <span>{this.props.songArtists.map(artist => artist.name).toString()}</span>
-                </div>
+            <div className="mx-auto w-50 h-50 flex shadow" id="song-info">
+                <a id="album-img" href={this.props.songHref} width="50%">
+                    <Image
+                        className="shadow"
+                        src={this.props.songAlbumImg}
+                        width="100%"
+                    />
+                </a>
                 <div>
+                    <div className="center-text" id="song-name">
+                        {this.props.songName}
+                    </div>
+                    <div className="center-text">
+                        {this.getArtistNames(this.props.songArtists)}
+                    </div>
+                </div>
+                <div id="controls">
                     <a
                         onClick={this.props.onBack}
-                        className={this.props.canGoBack ? 'shadow' : 'shadow disabled'}
+                        className={
+                            this.props.canGoBack
+                                ? 'controller-button'
+                                : 'controller-button disabled'
+                        }
                         role="button"
                     >
                         <Glyphicon glyph="step-backward" />
@@ -52,7 +75,11 @@ class SongDisplay extends Component {
 
                     {mainButton}
 
-                    <a className='shadow' onClick={this.props.onNext} role="button">
+                    <a
+                        className="controller-button"
+                        onClick={this.props.onNext}
+                        role="button"
+                    >
                         <Glyphicon glyph="step-forward" />
                     </a>
                 </div>

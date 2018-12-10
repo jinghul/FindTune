@@ -34,7 +34,10 @@ class Header extends Component {
                         >
                             Home
                         </NavItem>
-                        <NavItem eventKey={1} href="#content">
+                        <NavItem
+                            eventKey={1}
+                            href={process.env.INDEX_URL + '/#content'}
+                        >
                             About
                         </NavItem>
                         <NavItem

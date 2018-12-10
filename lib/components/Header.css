@@ -39,11 +39,10 @@
 }
 
 .navbar-collapse > ul.navbar-nav > li > a {
-    color: #fff;
+    color: #000;
     font-size: 20px;
-    font-weight: 500;
+    font-weight: 600;
     font-family: Roboto, sans-serif;
-    filter: drop-shadow(0 0 0.75rem #000);
 }
 
 .navbar-collapse > ul.navbar-nav > li > a:hover::before {
@@ -59,4 +58,5 @@
 .navbar-collapse > ul.navbar-nav > li > a:hover {
     font-weight: bold;
     color: #fff;
+    filter: drop-shadow(0 0 0.75rem #000);
 }

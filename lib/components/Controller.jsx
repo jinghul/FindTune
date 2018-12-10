@@ -80,6 +80,11 @@ class Controller extends Component {
                     // Playback status updates
                     this.player.addListener('player_state_changed', state => {
                         console.log(state);
+                        if (this.state.isPlaying && state.paused === true) {
+                            this.handlePause();
+                        } else if (!this.state.isPlaying && state.paused === false) {
+                            this.handlePlay();
+                        }
                     });
 
                     // Ready
@@ -158,6 +163,11 @@ class Controller extends Component {
 
                 return response.json().then(json => {
                     var songInfo = {};
+                    
+                    songInfo.name = json.name;
+                    songInfo.id = json.id;
+                    songInfo.uri = json.uri;
+                    songInfo.href = json.external_urls.spotify;
 
                     songInfo.albumImg = json.album.images[0].url; // 640 x 640 album image
                     songInfo.artists = json.artists.map(artist => ({
@@ -254,6 +264,10 @@ class Controller extends Component {
     };
 
     handlePlay = () => {
+        this.setState({
+            isPlaying: true
+        });
+
         fetch(
             `https://api.spotify.com/v1/me/player/play?device_id=${
                 this.playerId
@@ -270,13 +284,16 @@ class Controller extends Component {
     };
 
     handlePause = () => {
+        this.setState({
+            isPlaying: false
+        });
+
         fetch(
             `https://api.spotify.com/v1/me/player/pause?device_id=${
                 this.playerId
             }`,
             {
                 method: 'PUT',
-                body: JSON.stringify({ uris: [this.state.song.uri] }),
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${this.access_token}`,
@@ -286,9 +303,8 @@ class Controller extends Component {
     };
 
     handleBack = () => {
-        this.setState({
-            song: this.backStack.pop(),
-        });
+        const prev_song = this.backStack.pop();
+        this.queue.unshift(this.state.song);
 
         fetch(
             `https://api.spotify.com/v1/me/player/previous?device_id=${
@@ -303,6 +319,10 @@ class Controller extends Component {
                 },
             }
         );
+
+        this.setState({
+            song: prev_song,
+        });
     };
 
     handleNext = () => {
@@ -312,12 +332,31 @@ class Controller extends Component {
                 this.queue.concat(songs);
             });
         }
+
+        this.backStack.push(this.state.song);
         if (this.backStack.length > MAX_BACKSTACK_SIZE) {
             this.backStack.splice(
                 0,
                 MAX_BACKSTACK_SIZE - this.backStack.length
             );
         }
+        
+        if (this.state.isPlaying) {
+            fetch(
+                `https://api.spotify.com/v1/me/player/play?device_id=${
+                    this.playerId
+                }`,
+                {
+                    method: 'PUT',
+                    body: JSON.stringify({ uris: [nextSong.uri] }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${this.access_token}`,
+                    },
+                }
+            );
+        }
+
         this.setState({
             song: nextSong,
         });
@@ -359,6 +398,7 @@ class Controller extends Component {
                 <SongDisplay
                     songAlbumImg={this.state.song.albumImg}
                     songName={this.state.song.name}
+                    songHref={this.state.song.href}
                     songArtists={this.state.song.artists}
                     isPlaying={this.state.isPlaying}
                     canGoBack={

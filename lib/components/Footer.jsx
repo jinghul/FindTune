@@ -10,11 +10,10 @@ class Footer extends Component {
             <footer>
                 <div className="container-fluid">
                     <div className="footer-copyright text-center py-3">
-                        <Glyphicon
+                        <a href="https://github.com/jinghul/findtune" id="github-link"><Glyphicon
                             style={{ marginRight: 10 }}
                             glyph="heart-empty"
-                        />
-                        <a href="https://github.com/jinghul/findtune" id="github-link">Github Repository</a>
+                        />Github</a>
                     </div>
                 </div>
             </footer>

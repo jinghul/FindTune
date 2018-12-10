@@ -9,10 +9,10 @@ class Explore extends Component {
     state = {};
     render() {
         return (
-            <div>
+            <React.Fragment>
                 <Header page="play"/>
                 <Controller />
-            </div>
+            </React.Fragment>
         );
     }
 }

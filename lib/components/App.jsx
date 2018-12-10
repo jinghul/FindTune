@@ -10,12 +10,12 @@ import Footer from './Footer.jsx';
 class App extends Component {
     render() {
         return (
-            <div>
+            <React.Fragment>
                 <Header page={'home'} />
                 <Splash />
                 <About />
                 <Footer />
-            </div>
+            </React.Fragment>
         );
     }
 }

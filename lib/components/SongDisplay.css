@@ -20,16 +20,55 @@
 }
 
 span.glyphicon {
-    width: "30px";
+   font-size: 30px; 
+}
+
+.controller-button.disabled, .controller-button.disabled:hover {
+    visibility: hidden;
+}
+
+.controller-button, .center-text {
+    text-align: center;
+    color : #ffffff;
+    filter: none;
+}
+
+.controller-button.main-button {
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.controller-button:hover {
+    color: #d3d3d3;
 }
 
 .shadow {
-    filter: drop-shadow(0 0 0.75rem #000);
+    filter: drop-shadow(0 0 0.5rem #000);
+}
+
+#album-img {
+    margin-bottom: 4%;
+    width:50%;
+}
+
+#song-name {
+    font-size: 30px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+#controls {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    margin-top: 4%;
 }
 
 #song-info {
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    align-items: center;
     font-family: Roboto, sans-serif;
     font-size: 20px;
 }
