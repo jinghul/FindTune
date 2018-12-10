@@ -1,0 +1,34 @@
+#video-container {
+    position: absolute;
+
+    display: flex;
+    align-items: center;
+}
+
+#video-stream:hover {
+    background-color: rgba(211,211,211,0.7);
+}
+
+#minimize-button, #video-play-button {
+    position: absolute;
+}
+
+#minimize-button {
+    display: block;
+    height: 100%;
+    width: 5%;
+    right: -5%;
+    background-color: #fff;
+    text-align: center;
+}
+
+#minimize-button:hover, #video-play-button {
+    color: rgba(211,211,211,0.7);
+    font-weight: bold;
+}
+
+#video-play-button {
+    left: 40%;
+    top: 40%;
+    width: 20%;
+}

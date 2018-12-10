@@ -42,13 +42,10 @@ span.glyphicon {
     color: #d3d3d3;
 }
 
-.shadow {
-    filter: drop-shadow(0 0 0.5rem #000);
-}
-
 #album-img {
-    margin-bottom: 4%;
-    width:50%;
+    margin-bottom: 6%;
+    height: 70%;
+    display: block;
 }
 
 #song-name {
@@ -61,14 +58,16 @@ span.glyphicon {
     display: flex;
     flex-direction: row;
     justify-content: center;
-    margin-top: 4%;
+    margin-top: 6%;
 }
 
 #song-info {
+    height: 80%;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     font-family: Roboto, sans-serif;
     font-size: 20px;
+    flex-wrap: wrap;
 }

@@ -31,25 +31,25 @@ class SongDisplay extends Component {
         let mainButton;
         if (!isPlaying) {
             mainButton = (
-                <a className="main-button controller-button" onClick={this.props.onPlay}>
+                <a className="main-button controller-button" onClick={this.props.onPlay} role="button">
                     <Glyphicon glyph="play" />
                 </a>
             );
         } else {
             mainButton = (
-                <a className="main-button controller-button" onClick={this.props.onPause}>
+                <a className="main-button controller-button" onClick={this.props.onPause} role="button">
                     <Glyphicon glyph="pause" />
                 </a>
             );
         }
 
         return (
-            <div className="mx-auto w-50 h-50 flex shadow" id="song-info">
-                <a id="album-img" href={this.props.songHref} width="50%">
+            <div className="flex shadow" id="song-info">
+                <a id="album-img" href={this.props.songHref}>
                     <Image
                         className="shadow"
                         src={this.props.songAlbumImg}
-                        width="100%"
+                        height="100%"
                     />
                 </a>
                 <div>

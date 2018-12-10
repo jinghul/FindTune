@@ -42,6 +42,12 @@ app.use(
 app.use('/login', auth).use('/play', play);
 //.use(face)
 
+// Status 404 (Error) middleware
+app.use('*', function(req,res){
+    res.status(404);
+    res.send(req.protocol + '://' + req.get('host') + req.originalUrl + '\n - resource not found').end();
+})
+
 app.listen(config.app.port, () => {
     console.log('Listening on port ' + config.app.port + '...');
 });

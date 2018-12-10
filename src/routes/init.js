@@ -17,10 +17,11 @@ router.get(
     create_playlist_record
 );
 
-async function verify_user(req, res, next) {
+function verify_user(req, res, next) {
     var query = req.session.user_uid
         ? { _id: req.session.user_uid }
         : { id: req.session.userid };
+
     User.findOne(query)
         .then(function(user) {
             if (!user) {
@@ -29,8 +30,9 @@ async function verify_user(req, res, next) {
                     id: req.session.userid,
                     preferences: [],
                 });
+
                 user.save();
-                initPreferences(user, req.session.access_token);
+                initPreferences(user, req.session.access_token).catch(next);
             }
 
             req.session.user_uid = user._id;
@@ -47,17 +49,21 @@ function initPreferences(user, access_token) {
         json: true,
     };
 
-    request.get(get_top_options, (error, response, body) => {
-        if (!error && response.statusCode == 200) {
-            body.items.forEach(item =>
-                user.preferences.push({
-                    name: item.name,
-                    id: item.id,
-                    type: 'track',
-                })
-            );
-            user.save();
-        }
+    return new Promise((resolve, reject) => {
+        request.get(get_top_options, (error, response, body) => {
+            if (!error && response.statusCode == 200) {
+                body.items.forEach(item =>
+                    user.preferences.push({
+                        name: item.name,
+                        id: item.id,
+                        type: 'track',
+                    })
+                );
+                user.save().catch();
+            } else {
+                reject({statusCode : response.statusCode, statusMessage : response.statusMessage});
+            }
+        });
     });
 }
 
@@ -68,6 +74,7 @@ async function verify_playlist(req, res, next) {
             ' ' +
             req.session.playlist_uid
     );
+
     if (!req.session.playlist_uid) {
         /* User has no associated playlist. */
         console.log('NO ASSOCIATED PLAYLIST RECORD');
@@ -98,25 +105,29 @@ async function verify_playlist(req, res, next) {
     // eslint-disable-next-line no-unused-vars
     request.get(verify_playlist_options, (error, response, body) => {
         if (!error && response.statusCode == 200) {
-            Playlist.findOne({ _id: req.session.playlist_uid }).then(function(
-                playlist
-            ) {
-                if (
-                    playlist != null &&
-                    playlist.id === req.session.playlistid
-                ) {
-                    console.log(
-                        'FOUND ACTIVE PLAYLIST and CORRESPONDING RECORD'
-                    );
-                    res.status(200).end();
-                } else {
-                    console.log('ACTIVE PLAYLIST BUT NO RECORD, creating...');
-                    next();
+            Playlist.findOne({ _id: req.session.playlist_uid }).then(
+                playlist => {
+                    if (
+                        playlist != null &&
+                        playlist.id === req.session.playlistid
+                    ) {
+                        console.log(
+                            'FOUND ACTIVE PLAYLIST and CORRESPONDING RECORD'
+                        );
+                        res.status(200).end();
+                    } else {
+                        console.log(
+                            'ACTIVE PLAYLIST BUT NO RECORD, creating...'
+                        );
+                        next();
+                    }
                 }
-            });
+            );
         } else if (response.statusCode == 401) {
-            // Unauthorized, needs login again
-            res.status(401).send('User access expired or not logged in.');
+            next({
+                statusCode: response.statusCode,
+                statusMessage: response.statusMessage,
+            });
         } else {
             console.log(response.statusCode + ' ' + response.statusMessage);
             Playlist.findOneAndDelete({ _id: req.session.playlist_uid });
@@ -150,8 +161,8 @@ function create_playlist(req, res, next) {
         if (!error && response.statusCode == 201) {
             req.session.playlistid = body.id;
             next();
-        } else if (response.statusCode == 401) {
-            res.status(401).send('User access expired or not logged in.');
+        } else {
+            next({statusCode : response.statusCode, statusMessage : response.statusMessage});
         }
     });
 }
@@ -179,7 +190,7 @@ function create_playlist_record(req, res, next) {
             });
         })
         .catch(() => {
-            next('Error saving playlist to MongoDB.');
+            next('Error saving to database.');
         });
 }
 
