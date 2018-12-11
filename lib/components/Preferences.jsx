@@ -11,7 +11,7 @@ class Preferences extends Component {
     };
 
     getPreferences = () => {
-        fetch(process.env.INDEX_URL + '/profile', {
+        fetch(process.env.INDEX_URL + '/profile/preferences', {
             credentials: 'include',
         })
             .then(response => {

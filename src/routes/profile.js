@@ -49,9 +49,12 @@ router.get('/preferences', (req, res, next) => {
         }
 
         var { tracks, artists, genres } = user.preferences;
-        var weights = {};
-        
-    })
+        res.json({
+            tracks: tracks,
+            artists: artists,
+            genres: genres,
+        }).end();
+    }).catch(next);
 });
 
 router.use(function(err, req, res, next) {
