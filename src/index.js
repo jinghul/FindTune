@@ -3,6 +3,7 @@ const express = require('express');
 const auth = require('./routes/auth');
 const play = require('./routes/play');
 const face = require('./routes/face');
+const preference = require('/routes/preference');
 
 /* Utility Modules*/
 const path = require('path');
@@ -40,7 +41,7 @@ app.use(
 // if error, invoke login again, and save redirect url to take back to it.
 
 // Routes
-app.use('/login', auth).use('/play', play).use('/face', face);
+app.use('/login', auth).use('/play', play).use('/face', face).use('/preference', preference);
 
 // Status 404 (Error) middleware
 app.use('*', function(req,res){

@@ -7,6 +7,7 @@ module.exports = {
     entry: {
         index: './lib/index.js',
         play: './lib/play.js',
+        profile: './lib/profile.js'
     },
     output: {
         filename: '[name].bundle.js',
@@ -61,6 +62,13 @@ module.exports = {
             template: 'lib/static/play.html',
             mode: 'production',
             chunks: ['play'],
+            minify: true,
+        }),
+        new HtmlWebpackPlugin({
+            filename: 'profile.html',
+            template: 'lib/static/profile.html',
+            mode: 'production',
+            chunks: ['profile'],
             minify: true,
         }),
         new webpack.HotModuleReplacementPlugin(),

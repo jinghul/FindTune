@@ -121,10 +121,13 @@ class Controller extends Component {
                             })),
                         genres: [],
                     },
+                    isPlaying:!newPlayState.paused,
                 });
 
                 if (!newPlayState.paused) {
                     this.spotifyControl.play(trackUris);
+                } else {
+                    this.spotifyControl.pause();
                 }
             }
         } else {
@@ -233,9 +236,6 @@ class Controller extends Component {
         this.queue.unshift(this.state.song);
 
         this.spotifyControl.previous();
-        if (!this.state.isPlaying) {
-            this.spotifyControl.pause();
-        }
 
         this.setState({
             song: prevSong,
@@ -247,22 +247,16 @@ class Controller extends Component {
 
         this.setState({
             song: this.queue.shift(),
+            isPlaying: true,
         });
 
         if (this.queue.length < MIN_QUEUE_SIZE) {
             this.spotifyControl.getRecommendations().then(songs => {
-                console.log(songs);
                 this.queue = this.queue.concat(songs);
-
-                if (this.state.isPlaying) {
-                    this.handlePlay();
-                }
+                this.handlePlay();
             });
         } else {
             this.spotifyControl.next();
-            if (!this.state.isPlaying) {
-                this.spotifyControl.pause();
-            }
         }
     };
 
