@@ -3,6 +3,7 @@ import { Navbar, Nav, NavItem, Image } from 'react-bootstrap';
 
 import './Header.css';
 import Icon from '../assets/favicon.png';
+import PropTypes from 'prop-types';
 
 class Header extends Component {
     render() {
@@ -18,17 +19,26 @@ class Header extends Component {
                 </Navbar.Header>
                 <Navbar.Collapse>
                     <Nav pullRight className="shadow">
-                        <NavItem eventKey={1} id="home-button" href="/">
+                        <NavItem eventKey={1} href="/">
                             Home
                         </NavItem>
                         <NavItem
+                            onClick={() => {
+                                if (this.props.page == 'home') {
+                                    document.getElementById('content').scrollIntoView({ behavior: 'smooth' });
+                                } else {
+                                    window.location = process.env.INDEX_URL + '/#content';
+                                }
+                            }}
                             eventKey={1}
-                            href={process.env.INDEX_URL + '/#content'}
                         >
                             About
                         </NavItem>
-                        <NavItem eventKey={2} id="play-button" href="/play">
+                        <NavItem eventKey={2} href="/play">
                             Explore
+                        </NavItem>
+                        <NavItem eventKey={3} href="/profile">
+                            Profile
                         </NavItem>
                     </Nav>
                 </Navbar.Collapse>
@@ -36,5 +46,7 @@ class Header extends Component {
         );
     }
 }
+
+Header.propTypes = { page: PropTypes.string, aboutRef: PropTypes.object };
 
 export default Header;

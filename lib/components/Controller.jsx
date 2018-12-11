@@ -8,7 +8,6 @@ import SongDisplay from './SongDisplay.jsx';
 import Camera from './Camera.jsx';
 
 const MIN_QUEUE_SIZE = 5;
-const MAX_BACKSTACK_SIZE = 10;
 
 import './Controller.css';
 
@@ -22,6 +21,7 @@ class Controller extends Component {
         error: false,
         loading: true,
         isPlaying: false,
+        songsReady: false,
         result: '',
         song: {
             albumImg: '',
@@ -39,18 +39,24 @@ class Controller extends Component {
     componentDidMount() {
         this.spotifyControl = new SpotifyControl();
         this.spotifyControl
-            .init(this.handleError, this.handlePlayStateChange)
+            .init(this.handleError, this.handlePlayStateChange, this.handlePlayerReady)
             .then(success => {
                 if (success) {
                     this.timerID = setInterval(() => this.tick(), 3000000);
                     this.spotifyControl.getRecommendations().then(songs => {
                         this.setState({
-                            loading: false,
+                            songsReady: true,
                             song: songs[0],
                         });
 
                         this.queue = songs.slice(1);
                         this.backStack = [];
+
+                        if (this.state.playerReady) {
+                            this.setState({
+                                loading: false,
+                            });
+                        }
                     });
                 }
             });
@@ -67,11 +73,64 @@ class Controller extends Component {
         }
     };
 
+    handlePlayerReady = () => {
+        this.setState({
+            playerReady: true,
+        });
+
+        if (this.state.songsReady) {
+            this.setState({
+                loading: false,
+            });
+        }
+    }
+
     handlePlayStateChange = newPlayState => {
-        if (this.state.isPlaying && newPlayState.paused) {
-            this.handlePause();
-        } else if (!this.state.isPlaying && !newPlayState.paused) {
-            this.handlePlay();
+        if (
+            newPlayState.track_window &&
+            newPlayState.track_window.current_track
+        ) {
+            const song = this.state.song;
+            const currentTrack = newPlayState.track_window.current_track;
+            if (currentTrack.id == song.id) {
+                if (this.state.isPlaying && newPlayState.paused) {
+                    this.handlePause();
+                } else if (!this.state.isPlaying && !newPlayState.paused) {
+                    this.handleResume();
+                }
+            } else if (this.queue.length != 0 && currentTrack.id == this.queue[0].id){
+                const newSong = this.queue.shift();
+                this.setState({
+                    song : newSong,
+                });
+            } else {
+                var trackUris = [currentTrack.uri].concat(this.getQueueUris());
+                this.setState({
+                    song: {
+                        albumImg: currentTrack.album.images[2].url,
+                        uri: currentTrack.uri,
+                        id: currentTrack.id,
+                        name: currentTrack.name,
+                        href:
+                            'https://api.spotify.com/v1/tracks/' +
+                            currentTrack.id,
+                        artists: 
+                            currentTrack.artists.map(artist => ({
+                                name: artist.name,
+                                id: artist.uri.slice('spotify:artist:'.length),
+                            })),
+                        genres: [],
+                    },
+                });
+
+                if (!newPlayState.paused) {
+                    this.spotifyControl.play(trackUris);
+                }
+            }
+        } else {
+            this.setState({
+                isPlaying: false,
+            });
         }
     };
 
@@ -108,7 +167,7 @@ class Controller extends Component {
                     });
                     setTimeout(() => {
                         this.setState({
-                            result: ''
+                            result: '',
                         });
                     }, 5000);
 
@@ -117,7 +176,9 @@ class Controller extends Component {
                     }
                 }
             })
-            .catch(() => {this.handleError();});
+            .catch(() => {
+                this.handleError();
+            });
     };
 
     handleStartStream = camera => {
@@ -142,11 +203,22 @@ class Controller extends Component {
         });
     };
 
+    getQueueUris = () => {
+        return this.queue.map(song => song.uri);
+    }
+
+    handleResume = () => {
+        this.setState({
+            isPlaying: true,
+        });
+        this.spotifyControl.resume();
+    }
+
     handlePlay = () => {
         this.setState({
             isPlaying: true,
         });
-        this.spotifyControl.play(this.state.song.uri);
+        this.spotifyControl.play([this.state.song.uri].concat(this.getQueueUris()));
     };
 
     handlePause = () => {
@@ -160,7 +232,10 @@ class Controller extends Component {
         const prevSong = this.backStack.pop();
         this.queue.unshift(this.state.song);
 
-        this.spotifyControl.play(prevSong.uri);
+        this.spotifyControl.previous();
+        if (!this.state.isPlaying) {
+            this.spotifyControl.pause();
+        }
 
         this.setState({
             song: prevSong,
@@ -168,28 +243,27 @@ class Controller extends Component {
     };
 
     handleNext = () => {
-        const nextSong = this.queue.shift();
-        if (this.queue.length < MIN_QUEUE_SIZE) {
-            this.getRecommendations().then(songs => {
-                this.queue.concat(songs);
-            });
-        }
-
         this.backStack.push(this.state.song);
-        if (this.backStack.length > MAX_BACKSTACK_SIZE) {
-            this.backStack.splice(
-                0,
-                MAX_BACKSTACK_SIZE - this.backStack.length
-            );
-        }
-
-        if (this.state.isPlaying) {
-            this.spotifyControl.play(nextSong.uri);
-        }
 
         this.setState({
-            song: nextSong,
+            song: this.queue.shift(),
         });
+
+        if (this.queue.length < MIN_QUEUE_SIZE) {
+            this.spotifyControl.getRecommendations().then(songs => {
+                console.log(songs);
+                this.queue = this.queue.concat(songs);
+
+                if (this.state.isPlaying) {
+                    this.handlePlay();
+                }
+            });
+        } else {
+            this.spotifyControl.next();
+            if (!this.state.isPlaying) {
+                this.spotifyControl.pause();
+            }
+        }
     };
 
     getLikeDisplay = () => {
@@ -198,11 +272,11 @@ class Controller extends Component {
                 return 'Liked';
             } else {
                 return 'Skipped';
-            } 
+            }
         } else {
             return '';
         }
-    }
+    };
 
     render() {
         const loading = this.state.loading;
@@ -240,7 +314,7 @@ class Controller extends Component {
                         this.backStack != undefined &&
                         this.backStack.length !== 0
                     }
-                    onPlay={this.handlePlay}
+                    onPlay={this.backStack.length == 0 ? this.handlePlay : this.handleResume}
                     onPause={this.handlePause}
                     onNext={this.handleNext}
                     onBack={this.handleBack}

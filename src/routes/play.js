@@ -61,38 +61,50 @@ router.get('/recommend', (req, res, next) => {
             );
         }
 
-        var seed_list;
-        var seed_tracks = '',
-            seed_artists = '',
-            seed_genres = '';
+        console.log("GETTING RECS");
 
-        if (user.preferences.length < MAX_SEED_LENGTH) {
+        var seedTracks = '',
+            seedArtists = '',
+            seedGenres = '';
+        
+        var preferences = {...user.preferences};
+        var prefTracks = preferences.tracks;
+        var prefArtists = preferences.artists;
+        var prefGenres = preferences.genres;
+
+        var totalLength = prefTracks.length + prefArtists.length + prefGenres.length;
+        if (totalLength < MAX_SEED_LENGTH) {
             var random_genres = utils.getRandomElements(
                 genres,
-                MAX_SEED_LENGTH - user.preferences.length
+                MAX_SEED_LENGTH - totalLength
             );
 
-            random_genres.forEach(random_genre => {
-                seed_genres += random_genre + '%2C';
+            random_genres.forEach(randomGenre => {
+                seedGenres += randomGenre + '%2C';
             });
-
-            seed_list = user.preferences;
         } else {
-            seed_list = utils.getRandomElements(
-                user.preferences,
-                MAX_SEED_LENGTH - 1
-            );
-        }
-
-        seed_list.forEach(seed => {
-            if (seed.type === 'artist') {
-                seed_artists += seed.id + '%2C';
-            } else if (seed.type === 'genre') {
-                seed_genres += seed.id + '%2C';
-            } else if (seed.type === 'track') {
-                seed_tracks += seed.id + '%2C';
+            var total = 0;
+            while (total < MAX_SEED_LENGTH) {
+                var randomCategory = utils.getRandomNumber(3);
+                let randomIndex;
+                if (randomCategory == 0 && prefTracks.length > 0) {
+                    randomIndex = utils.getRandomNumber(prefTracks.length);
+                    seedTracks += prefTracks[randomIndex].id + '%2C';
+                    prefTracks.splice(randomIndex, 1);
+                    total += 1;
+                } else if (randomCategory == 1 && prefArtists.length > 0) {
+                    randomIndex = utils.getRandomNumber(prefArtists.length);
+                    seedArtists += prefArtists[randomIndex].id + '%2C';
+                    prefArtists.splice(randomIndex, 1);
+                    total += 1;
+                } else if (prefGenres.length > 0) {
+                    randomIndex = utils.getRandomNumber(prefGenres.length);
+                    seedGenres += prefGenres[randomIndex].id + '%2C';
+                    prefGenres.splice(randomIndex, 1);
+                    total += 1;
+                }
             }
-        });
+        }
 
         function parse(seed_type, seed_name) {
             return seed_type === ''
@@ -103,12 +115,12 @@ router.get('/recommend', (req, res, next) => {
                       '&';
         }
 
-        seed_tracks = parse(seed_tracks, 'seed_tracks');
-        seed_artists = parse(seed_artists, 'seed_artists');
-        seed_genres = parse(seed_genres, 'seed-genres');
+        seedTracks = parse(seedTracks, 'seed_tracks');
+        seedArtists = parse(seedArtists, 'seed_artists');
+        seedGenres = parse(seedGenres, 'seed-genres');
 
         var seeds =
-            seed_tracks + seed_artists + seed_genres + '&min_popularity=50';
+            seedTracks + seedArtists + seedGenres + '&min_popularity=50';
         var recommendation_options = {
             url:
                 'https://api.spotify.com/v1/recommendations?limit=' +

@@ -1,0 +1,19 @@
+#preference-container {
+    padding-top: 100px;
+    background-color: white;
+}
+
+.display-box {
+    max-height: 500px;
+    overflow:scroll;
+    -webkit-overflow-scrolling: touch;
+}
+
+.display-box > ul > li {
+    display: block;
+    height: 50px;
+}
+
+img {
+    display: inline-block;
+}

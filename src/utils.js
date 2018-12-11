@@ -14,6 +14,14 @@ var generateRandomString = function(length) {
 };
 
 /**
+ * Returns a random integer from 0 to max.
+ * @param {Number} max 
+ */
+function getRandomNumber(max) {
+    return Math.floor(Math.random() * (max));
+}
+
+/**
  * Return a random subset of elements from the list.
  * @param  {Array} array The length of the string.
  * @param  {Integer} count The number of elements to return.
@@ -71,3 +79,4 @@ module.exports.generateRandomString = generateRandomString;
 module.exports.getRandomElements = getRandomElements;
 module.exports.shuffleArray = shuffleArray;
 module.exports.compareTime = compareTime;
+module.exports.getRandomNumber = getRandomNumber;

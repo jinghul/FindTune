@@ -26,17 +26,20 @@
     position: absolute;
     display: flex;
     top: 45%;
-    right: 2%;
+    right: 5%;
     height: 10%;
     align-items: center;
-    background-color: white;
     border-radius: 5%;
 }
 
-.like > h1 {
-    color: green;
+#like-display > h1 {
+    color:  white;
+}
+
+.like {
+    background-color: green;
 }
 
 .dislike > h1 {
-    color: maroon;
+    background-color: maroon;
 }

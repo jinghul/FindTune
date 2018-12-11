@@ -28,7 +28,11 @@ function verify_user(req, res, next) {
                 user = new User({
                     name: req.session.user_name,
                     id: req.session.userid,
-                    preferences: [],
+                    preferences: {
+                        artists : [],
+                        genres: [],
+                        tracks: []
+                    },
                 });
 
                 user.save();
@@ -53,15 +57,14 @@ function initPreferences(user, access_token) {
         request.get(get_top_options, (error, response, body) => {
             if (!error && response.statusCode == 200) {
                 body.items.forEach(item =>
-                    user.preferences.push({
+                    user.preferences.tracks.push({
                         name: item.name,
                         id: item.id,
-                        type: 'track',
-                        likes: 0,
-                        dislikes: 0
+                        image: item.album.images[0].url,
                     })
                 );
-                user.save().catch();
+                user.save();
+                resolve();
             } else {
                 reject({statusCode : response.statusCode, statusMessage : response.statusMessage});
             }
@@ -106,6 +109,7 @@ async function verify_playlist(req, res, next) {
 
     // eslint-disable-next-line no-unused-vars
     request.get(verify_playlist_options, (error, response, body) => {
+        console.log("VERIFY PLAYLIST RESPONSE: " + response.statusCode);
         if (!error && response.statusCode == 200) {
             Playlist.findOne({ _id: req.session.playlist_uid }).then(
                 playlist => {
@@ -113,7 +117,7 @@ async function verify_playlist(req, res, next) {
                         playlist != null &&
                         playlist.id === req.session.playlistid
                     ) {
-                        res.status(200).end();
+                        return res.status(200).end();
                     } else {
                         next();
                     }
@@ -135,7 +139,7 @@ async function verify_playlist(req, res, next) {
 }
 
 function create_playlist(req, res, next) {
-    if (req.session.playlistid != undefined) {
+    if (req.session.playlistid) {
         return next();
     }
 
@@ -177,10 +181,12 @@ function create_playlist_record(req, res, next) {
     playlist
         .save()
         .then(() => {
+            console.log("CREATED PLAYLIST");
             User.findOneAndUpdate(
                 { _id: req.session.user_uid },
                 { $set: { playlist_uid: playlist._id } }
             ).then(() => {
+                console.log("USER PLAYLIST ID SAVED");
                 req.session.playlist_uid = playlist._id;
                 res.status(200).end();
             });
