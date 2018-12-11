@@ -30,7 +30,7 @@ const NUM_RETURN_RECS = 10;
 router.use((req, res, next) => {
     /* Check if user has a session userid and session hasn't expired */
     if (
-        !req.session.userid ||
+        !req.session.userid || !req.session.last_auth ||
         utils.compareTime(new Date(), req.session.last_auth, HOUR_MS)
     ) {
         if (req.path == '/') {

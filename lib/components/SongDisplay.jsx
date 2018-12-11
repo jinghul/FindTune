@@ -5,9 +5,8 @@ import PropTypes from 'prop-types';
 import './SongDisplay.css';
 
 class SongDisplay extends Component {
-    state = {};
+    state = {width:window.innerWidth, height:window.innerHeight};
     componentDidMount() {
-        this.setState({ width: window.innerWidth, height: window.innerHeight });
         window.addEventListener('resize', this.updateDimensions);
     }
 

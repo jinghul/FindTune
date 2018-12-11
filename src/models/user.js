@@ -17,8 +17,8 @@ const UserSchema = new Schema({
 });
 
 function updatePreferences(query, items, type, update) {
-    items.forEach(artist => {
-        query['preferences.id'] = artist.id;
+    items.forEach(item => {
+        query['preferences.id'] = item.id;
         User.findOneAndUpdate(
             query,
             { $inc: { 'preferences.$.like': update } },
@@ -27,8 +27,8 @@ function updatePreferences(query, items, type, update) {
                     User.findOneAndUpdate(query, {
                         $push: {
                             preferences: {
-                                name: artist.name,
-                                id: artist.id,
+                                name: item.name,
+                                id: item.id,
                                 type: type,
                                 likes: 0,
                                 dislikes: 0,

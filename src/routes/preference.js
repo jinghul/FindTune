@@ -5,7 +5,7 @@ const Playlist = require('../models/playlist');
 const User = require('../models/user');
 
 function like(req, res, next) {
-    var track = req.body.track;
+    var track = JSON.parse(req.body.track);
 
     var add_track_options = {
         url:
@@ -21,6 +21,7 @@ function like(req, res, next) {
 
     // eslint-disable-next-line no-unused-vars
     request.post(add_track_options, (error, response, body) => {
+        console.log("ADD TRACK return" + response.statusCode + " " + response.statusMessage);
         if (!error && response.statusCode == 201) {
             Playlist.findOneAndUpdate(
                 { _id: req.session.playlist_uid },
@@ -35,15 +36,20 @@ function like(req, res, next) {
     });
 
     User.findOneAndUpdatePreferences({ _id: req.session.user_uid }, track, 1);
+    res.json({ action: 'like', trackId: track.id }).end();
 }
 
 // eslint-disable-next-line no-unused-vars
 function dislike(req, res, next) {
+    var track = JSON.parse(req.body.track);
+
     User.findOneAndUpdatePreferences(
         { _id: req.session.user_uid },
-        req.body.track,
+        track,
         -1
     );
+
+    res.json({ action: 'dislike', trackId: track.id }).end();
 }
 
 module.exports.like = like;

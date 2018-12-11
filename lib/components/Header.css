@@ -36,7 +36,7 @@
     border: none;
 }
 
-.navbar-collapse > ul.navbar-nav {
+.navbar-collapse > ul.navbar-nav, .navbar-toggle.collapsed {
     background-color: white;
  }
 

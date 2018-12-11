@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import posed from 'react-pose';
 import { Glyphicon } from 'react-bootstrap';
 
-
 import './Camera.css';
 
 const Box = posed.div({
@@ -27,11 +26,15 @@ class Camera extends Component {
 
             if (_this.props.streaming) {
                 _this.props.onStartStream(_this);
+            } else {
+                _this.props.onPauseStream(_this);
             }
         };
 
         this.timerID = setInterval(
-            () => {this.takePicture();},
+            () => {
+                this.takePicture();
+            },
             20000 // 20 Seconds interval
         );
     }
@@ -45,8 +48,16 @@ class Camera extends Component {
             var canvas = document.createElement('canvas');
             canvas.width = this.props.width;
             canvas.height = this.props.height;
-            canvas.getContext('2d').drawImage(this.videoStream, 0, 0, this.props.width, this.props.width);
-            canvas.toBlob((blob) => {
+            canvas
+                .getContext('2d')
+                .drawImage(
+                    this.videoStream,
+                    0,
+                    0,
+                    this.props.width,
+                    this.props.width
+                );
+            canvas.toBlob(blob => {
                 this.props.onCheckFace(blob);
             });
         }
@@ -55,8 +66,9 @@ class Camera extends Component {
     render() {
         return (
             <Box
+                className="shadow"
                 id="video-container"
-                style={{ height: '40%', width: '24%' }}
+                style={{ height: '32%', width: '24%' }}
                 pose={this.props.minimized ? 'closed' : 'open'}
             >
                 <video id="video-stream" height="100%" width="100%" />

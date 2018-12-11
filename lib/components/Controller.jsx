@@ -69,17 +69,20 @@ class Controller extends Component {
     };
 
     handlePlayStateChange = newPlayState => {
-        if (this.state.isPlaying && newPlayState.paused === true) {
+        if (this.state.isPlaying && newPlayState.paused) {
             this.handlePause();
-        } else if (!this.state.isPlaying && newPlayState.paused === false) {
+        } else if (!this.state.isPlaying && !newPlayState.paused) {
             this.handlePlay();
         }
     };
 
     handleError = err => {
         console.log(err);
+        this.handlePause();
         this.setState({
             error: true,
+            streaming: false,
+            isPlaying: false,
         });
     };
 

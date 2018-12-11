@@ -43,9 +43,11 @@ router.post('/emotion', upload.single('face'), (req, res, next) => {
 
     request.post(emotionOptions, (error, response, body) => {
         if (!error && response.statusCode == 200) {
+            console.log(body);
             var jsonResponse = JSON.parse(body);
-            if (jsonResponse === []) {
-                res.status(200).send({ action: 'none'}).end();
+            console.log(jsonResponse);
+            if (body == '[]' || !jsonResponse) {
+                return res.status(200).send({ action: 'none'}).end();
             }
 
             console.log(jsonResponse[0].faceAttributes.emotion);
@@ -79,16 +81,11 @@ router.post('/emotion', upload.single('face'), (req, res, next) => {
             } else if (req.body === undefined || req.body.track === undefined) {
                 return res.status(500).send('No body with request').end();
             } else {
-                console.log(req.body.track);
-                var track = JSON.parse(req.body.track);
-
                 if (result === 'like') {
                     preference.like(req,res);
                 } else if (result === 'dislike') {
                     preference.dislike(req,res,next);
                 }
-
-                res.json({ action: 'like', trackId: track.id }).end();
             }
         } else {
             res.status(response.statusCode).send(response.statusMessage);
