@@ -25,9 +25,7 @@ function like(req, res, next) {
             Playlist.findOneAndUpdate(
                 { _id: req.session.playlist_uid },
                 { $addToSet: { songs: track } }
-            ).then(() => {
-                console.log('Saved to playlist');
-            });
+            );
         } else {
             next({
                 statusCode: response.statusCode,

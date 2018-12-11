@@ -40,7 +40,6 @@ const scope =
 router.use(cors()).use(cookieParser());
 
 router.get('/', function(req, res) {
-    console.log('authorizing!!');
     var state = utils.generateRandomString(16);
 
     // on the index page when user clicks login or from another page,
@@ -52,7 +51,6 @@ router.get('/', function(req, res) {
     );
 
     // your application requests authorization
-    console.log('redirecting to spotify auth');
     res.redirect(
         'https://accounts.spotify.com/authorize?' +
             querystring.stringify({
@@ -66,7 +64,6 @@ router.get('/', function(req, res) {
 });
 
 router.get('/callback', function(req, res, next) {
-    console.log('authorize callback');
     // application requests refresh and access tokens
     // after checking the state parameter
 
@@ -113,7 +110,6 @@ router.get('/callback', function(req, res, next) {
                 req.cookies && req.cookies[auth_redirect_key]
                     ? req.cookies[auth_redirect_key]
                     : index_uri;
-            console.log(auth_redirect_uri);
             res.clearCookie(auth_redirect_key);
             res.redirect(decodeURIComponent(auth_redirect_uri));
         } else {

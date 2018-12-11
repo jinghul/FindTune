@@ -35,7 +35,7 @@ class Camera extends Component {
             () => {
                 this.takePicture();
             },
-            20000 // 20 Seconds interval
+            10000 // 20 Seconds interval
         );
     }
 

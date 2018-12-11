@@ -15,7 +15,6 @@ const profile_url = index_uri + '/profile';
 
 /* Database */
 const User = require('../models/user');
-const Playlist = require('../models/playlist');
 
 /* refresh token on each call */
 router.use((req, res, next) => {
@@ -47,7 +46,6 @@ router.get('/preferences', (req, res, next) => {
         if (!user) {
             res.status(500).send('User not found in database.');
         }
-
         var { tracks, artists, genres } = user.preferences;
         res.json({
             tracks: tracks,

@@ -61,8 +61,6 @@ router.get('/recommend', (req, res, next) => {
             );
         }
 
-        console.log("GETTING RECS");
-
         var seedTracks = '',
             seedArtists = '',
             seedGenres = '';

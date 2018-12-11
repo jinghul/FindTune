@@ -73,7 +73,6 @@ UserSchema.methods.updateTracks = function(track, confirm) {
         });
     }
 
-    console.log('Saved track preferences to user');
     if (confirm) {
         this.save();
     }
@@ -92,11 +91,22 @@ UserSchema.methods.updateGenres = function(genres, update, confirm) {
                 preferences[index].likes -= 1;
             }
         } else {
-            preferences.splice(Math.abs(index), 0, { id: genre });
+            var genrePref = {
+                id : genre,
+                likes: 0,
+                dislikes: 0,
+            }
+
+            if (update > 0) {
+                genrePref.likes = 1;
+            } else {
+                genrePref.dislikes = 1;
+            }
+
+            preferences.splice(Math.abs(index), 0, genrePref);
         }
     });
 
-    console.log('Saved genre preferences to user');
     if (confirm) {
         this.save();
     }
@@ -106,7 +116,6 @@ UserSchema.methods.updateArtists = function(artists, update, confirm) {
     Array.prototype.binaryIndexOf = binaryIndexOf;
 
     var preferences = this.preferences.artists;
-    console.log('User artists: ' + preferences.toString());
     artists.forEach(artist => {
         var index = preferences.binaryIndexOf(artist.id);
         if (index >= 0) {
@@ -116,14 +125,23 @@ UserSchema.methods.updateArtists = function(artists, update, confirm) {
                 preferences[index].likes -= 1;
             }
         } else {
-            preferences.splice(Math.abs(index), 0, {
+            var artistPref = {
                 name: artist.name,
                 id: artist.id,
-            });
+                likes: 0,
+                dislikes: 0,
+            }
+
+            if (update > 0) {
+                artistPref.likes = 1;
+            } else {
+                artistPref.dislikes = 1;
+            }
+
+            preferences.splice(Math.abs(index), 0, artistPref);
         }
     });
 
-    console.log('Saved artist preferences to user');
     if (confirm) {
         this.save();
     }

@@ -140,6 +140,7 @@ class Controller extends Component {
     handleError = err => {
         console.log(err);
         this.handlePause();
+        this.handlePauseStream();
         this.setState({
             error: true,
             streaming: false,

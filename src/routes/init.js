@@ -73,16 +73,8 @@ function initPreferences(user, access_token) {
 }
 
 async function verify_playlist(req, res, next) {
-    console.log(
-        'VERIFY_PLAYLIST: ' +
-            req.session.playlistid +
-            ' ' +
-            req.session.playlist_uid
-    );
-
     if (!req.session.playlist_uid) {
         /* User has no associated playlist. */
-        console.log('NO ASSOCIATED PLAYLIST RECORD');
         delete req.session.playlist_uid;
         return next();
     } else {
@@ -90,12 +82,10 @@ async function verify_playlist(req, res, next) {
             _id: req.session.playlist_uid,
         });
         if (playlist === null) {
-            console.log('NO ASSOCIATED PLAYLIST RECORD');
             delete req.session.playlist_uid;
             return next();
         }
         req.session.playlistid = playlist.id;
-        console.log('PLAYLISTID: ' + req.session.playlistid);
     }
 
     var verify_playlist_options = {
@@ -109,7 +99,6 @@ async function verify_playlist(req, res, next) {
 
     // eslint-disable-next-line no-unused-vars
     request.get(verify_playlist_options, (error, response, body) => {
-        console.log("VERIFY PLAYLIST RESPONSE: " + response.statusCode);
         if (!error && response.statusCode == 200) {
             Playlist.findOne({ _id: req.session.playlist_uid }).then(
                 playlist => {
@@ -129,7 +118,6 @@ async function verify_playlist(req, res, next) {
                 statusMessage: response.statusMessage,
             });
         } else {
-            console.log(response.statusCode + ' ' + response.statusMessage);
             Playlist.findOneAndDelete({ _id: req.session.playlist_uid });
             delete req.session.playlistid;
             delete req.session.playlist_uid;
@@ -156,7 +144,6 @@ function create_playlist(req, res, next) {
         },
     };
 
-    console.log('CREATING PLAYLIST IN SPOTIFY');
     request.post(create_playlist_options, async (error, response, body) => {
         if (!error && response.statusCode == 201) {
             req.session.playlistid = body.id;
@@ -172,7 +159,6 @@ function create_playlist_record(req, res, next) {
         return res.status(200).end();
     }
 
-    console.log('CREATING PLAYLIST ' + req.session.playlistid + ' RECORD');
     var playlist = new Playlist({
         id: req.session.playlistid,
         songs: [],
@@ -181,12 +167,10 @@ function create_playlist_record(req, res, next) {
     playlist
         .save()
         .then(() => {
-            console.log("CREATED PLAYLIST");
             User.findOneAndUpdate(
                 { _id: req.session.user_uid },
                 { $set: { playlist_uid: playlist._id } }
             ).then(() => {
-                console.log("USER PLAYLIST ID SAVED");
                 req.session.playlist_uid = playlist._id;
                 res.status(200).end();
             });

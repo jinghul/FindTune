@@ -15,7 +15,7 @@ const {
 } = require('../config').keys;
 
 const endpoint = 'https://eastus.api.cognitive.microsoft.com/face/v1.0/detect?';
-const EMOTION_THRESHOLD = 0.5;
+const EMOTION_THRESHOLD = 0.4;
 
 router.use((req, res, next) => {
     if (!req.session.userid) {
@@ -43,9 +43,7 @@ router.post('/emotion', upload.single('face'), (req, res, next) => {
 
     request.post(emotionOptions, (error, response, body) => {
         if (!error && response.statusCode == 200) {
-            console.log(body);
             var jsonResponse = JSON.parse(body);
-            console.log(jsonResponse);
             if (body == '[]' || !jsonResponse) {
                 return res.status(200).send({ action: 'none'}).end();
             }
