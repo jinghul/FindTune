@@ -44,7 +44,6 @@ class Controller extends Component {
                 if (success) {
                     this.timerID = setInterval(() => this.tick(), 3000000);
                     this.spotifyControl.getRecommendations().then(songs => {
-                        console.log(songs);
                         this.setState({
                             loading: false,
                             song: songs[0],
@@ -97,7 +96,6 @@ class Controller extends Component {
             body: formData,
         })
             .then(response => {
-                console.log(response);
                 return response.json();
             })
             .then(json => {
@@ -111,8 +109,12 @@ class Controller extends Component {
                     setTimeout(() => {
                         this.setState({
                             result: ''
-                        })
-                    }, 1000);
+                        });
+                    }, 5000);
+
+                    if (json.action == 'dislike') {
+                        this.handleNext();
+                    }
                 }
             })
             .catch(() => {this.handleError();});
@@ -122,8 +124,6 @@ class Controller extends Component {
         this.setState({
             streaming: true,
         });
-
-        console.log('Starting stream!');
 
         camera.videoStream.play();
     };
@@ -192,6 +192,18 @@ class Controller extends Component {
         });
     };
 
+    getLikeDisplay = () => {
+        if (this.state.result != '') {
+            if (this.state.result == 'like') {
+                return 'Liked';
+            } else {
+                return 'Skipped';
+            } 
+        } else {
+            return '';
+        }
+    }
+
     render() {
         const loading = this.state.loading;
         const error = this.state.error;
@@ -256,7 +268,7 @@ class Controller extends Component {
                     pose={this.state.result != '' ? 'visible' : 'hidden'}
                     className={this.state.result != '' ? this.state.result : ''}
                 >
-                    <h1>{this.state.result == 'like' ? 'Liked' : 'Skipped'}</h1>
+                    <h1>{this.getLikeDisplay()}</h1>
                 </LikeDisplay>
             </div>
         );

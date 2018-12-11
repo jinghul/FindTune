@@ -24,9 +24,11 @@
 
 #like-display {
     position: absolute;
-    top: 40%;
+    display: flex;
+    top: 45%;
     right: 2%;
-    height: 20%;
+    height: 10%;
+    align-items: center;
     background-color: white;
     border-radius: 5%;
 }

@@ -21,7 +21,7 @@ function updatePreferences(query, items, type, update) {
         query['preferences.id'] = item.id;
         User.findOneAndUpdate(
             query,
-            { $inc: { 'preferences.$.like': update } },
+            { $inc: { 'preferences.$.likes': update } }, {upsert: true},
             (err, doc) => {
                 if (!doc) {
                     User.findOneAndUpdate(query, {
@@ -39,6 +39,8 @@ function updatePreferences(query, items, type, update) {
             }
         );
     });
+
+    console.log('Saved preferences to user ' + type);
 }
 
 UserSchema.statics.findOneAndUpdatePreferences = function(query, track, update) {

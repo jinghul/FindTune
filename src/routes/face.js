@@ -82,7 +82,7 @@ router.post('/emotion', upload.single('face'), (req, res, next) => {
                 return res.status(500).send('No body with request').end();
             } else {
                 if (result === 'like') {
-                    preference.like(req,res);
+                    preference.like(req,res,next);
                 } else if (result === 'dislike') {
                     preference.dislike(req,res,next);
                 }

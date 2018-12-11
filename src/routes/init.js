@@ -57,6 +57,8 @@ function initPreferences(user, access_token) {
                         name: item.name,
                         id: item.id,
                         type: 'track',
+                        likes: 0,
+                        dislikes: 0
                     })
                 );
                 user.save().catch();
@@ -111,14 +113,8 @@ async function verify_playlist(req, res, next) {
                         playlist != null &&
                         playlist.id === req.session.playlistid
                     ) {
-                        console.log(
-                            'FOUND ACTIVE PLAYLIST and CORRESPONDING RECORD'
-                        );
                         res.status(200).end();
                     } else {
-                        console.log(
-                            'ACTIVE PLAYLIST BUT NO RECORD, creating...'
-                        );
                         next();
                     }
                 }

@@ -3,8 +3,7 @@ import React, { Component } from 'react';
 import Header from './Header.jsx';
 import Controller from './Controller.jsx';
 
-class Explore extends Component {
-    state = {};
+class Profile extends Component {
     render() {
         return (
             <React.Fragment>
@@ -15,4 +14,4 @@ class Explore extends Component {
     }
 }
 
-export default Explore;
+export default Profile;

@@ -21,12 +21,13 @@ function like(req, res, next) {
 
     // eslint-disable-next-line no-unused-vars
     request.post(add_track_options, (error, response, body) => {
-        console.log("ADD TRACK return" + response.statusCode + " " + response.statusMessage);
         if (!error && response.statusCode == 201) {
             Playlist.findOneAndUpdate(
                 { _id: req.session.playlist_uid },
                 { $addToSet: { songs: track } }
-            );
+            ).then(() => {
+                console.log('Saved to playlist');
+            });
         } else {
             next({
                 statusCode: response.statusCode,

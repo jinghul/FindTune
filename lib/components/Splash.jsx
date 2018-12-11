@@ -2,11 +2,15 @@ import React, { Component } from 'react';
 
 import './Splash.css';
 
-// TODO: Title Header and scroll down
-
 class Splash extends Component {
     render() {
-        return <div id="splash" />;
+        return (
+            <div id="splash">
+                <div className="container">
+                    <h1>FindTune</h1>
+                </div>
+            </div>
+        );
     }
 }
 

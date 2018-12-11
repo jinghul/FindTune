@@ -6,3 +6,14 @@
     background-size: cover; /* Resize the background image to cover the entire container */
     text-align: center;
 }
+
+#splash > .container > h1{
+    color: white;
+    font-family: Roboto, sans-serif;
+    font-size: 80px;
+    font-weight: bold;
+}
+
+#splash > .container {
+    margin-top: 150px;
+}

@@ -71,6 +71,21 @@ class Camera extends Component {
                 style={{ height: '32%', width: '24%' }}
                 pose={this.props.minimized ? 'closed' : 'open'}
             >
+                <div id="play-button-cont">
+                    <a
+                        id="video-play-button"
+                        role="button"
+                        onClick={() => {
+                            this.props.streaming
+                                ? this.props.onPauseStream(this)
+                                : this.props.onStartStream(this);
+                        }}
+                    >
+                        <Glyphicon
+                            glyph={this.props.streaming ? 'pause' : 'play'}
+                        />
+                    </a>
+                </div>
                 <video id="video-stream" height="100%" width="100%" />
                 <a
                     id="minimize-button"
@@ -81,19 +96,6 @@ class Camera extends Component {
                         glyph={
                             this.props.minimized ? 'menu-right' : 'menu-left'
                         }
-                    />
-                </a>
-                <a
-                    id="video-play-button"
-                    role="button"
-                    onClick={() => {
-                        this.props.streaming
-                            ? this.props.onPauseStream(this)
-                            : this.props.onStartStream(this);
-                    }}
-                >
-                    <Glyphicon
-                        glyph={this.props.streaming ? 'pause' : 'play'}
                     />
                 </a>
             </Box>
