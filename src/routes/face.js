@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const preference = require('./preference');
 
+const querystring = require('querystring');
 const request = require('request');
 
 /* Handle Image Files */
@@ -13,7 +14,7 @@ const {
     face: { key1 },
 } = require('../config').keys;
 
-const endpoint = 'https://eastus.api.cognitive.microsoft.com/face/v1.0/detect';
+const endpoint = 'https://eastus.api.cognitive.microsoft.com/face/v1.0/detect?';
 const EMOTION_THRESHOLD = 0.5;
 
 router.use((req, res, next) => {
@@ -24,19 +25,15 @@ router.use((req, res, next) => {
     }
 });
 
-router.get('/emotion', upload.single('image'), (req, res) => {
+router.post('/emotion', upload.single('face'), (req, res, next) => {
     // get image data and send to face api and then return emotion
 
-    const params = {
-        returnFaceId: 'false',
-        returnRectangle: 'false',
-        returnFaceLandmarks: 'false',
-        returnFaceAttributes: '' + 'emotion',
-    };
-
     const emotionOptions = {
-        uri: endpoint,
-        qs: params,
+        uri: endpoint + querystring.stringify({
+            returnFaceId: false,
+            returnFaceLandmarks: false,
+            returnFaceAttributes: 'emotion',
+        }),
         body: req.file.buffer,
         headers: {
             'Content-Type': 'application/octet-stream',
@@ -45,8 +42,14 @@ router.get('/emotion', upload.single('image'), (req, res) => {
     };
 
     request.post(emotionOptions, (error, response, body) => {
-        if (!error && response === 200) {
+        if (!error && response.statusCode == 200) {
             var jsonResponse = JSON.parse(body);
+            if (jsonResponse === []) {
+                res.status(200).send({ action: 'none'}).end();
+            }
+
+            console.log(jsonResponse[0].faceAttributes.emotion);
+
             var {
                 anger,
                 contempt,
@@ -56,7 +59,6 @@ router.get('/emotion', upload.single('image'), (req, res) => {
                 sadness,
             } = jsonResponse[0].faceAttributes.emotion;
 
-            console.log(jsonResponse);
             var result;
             if (happiness >= EMOTION_THRESHOLD) {
                 // ONLY POSITIVE
@@ -73,26 +75,20 @@ router.get('/emotion', upload.single('image'), (req, res) => {
             }
 
             if (result === undefined) {
-                return res.send('Not conclusive result.').end();
+                return res.json({ action: 'none' }).end();
+            } else if (req.body === undefined || req.body.track === undefined) {
+                return res.status(500).send('No body with request').end();
             } else {
-
-                console.log(req.body);
-
-                var track = {}
-                track.name = req.body.name;
-                track.id = req.body.id;
-                track.uri = req.body.uri;
-                track.href = req.body.href;
-                track.artists = JSON.parse(req.body.artists);
-                track.genres = req.body.genres.split(',');
+                console.log(req.body.track);
+                var track = JSON.parse(req.body.track);
 
                 if (result === 'like') {
-                    preference.like(track);
+                    preference.like(req,res);
                 } else if (result === 'dislike') {
-                    preference.dislike(track);
+                    preference.dislike(req,res,next);
                 }
 
-                res.send(result).end();
+                res.json({ action: 'like', trackId: track.id }).end();
             }
         } else {
             res.status(response.statusCode).send(response.statusMessage);

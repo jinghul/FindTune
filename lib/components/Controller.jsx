@@ -2,20 +2,27 @@ import React, { Component } from 'react';
 import { Jumbotron } from 'react-bootstrap';
 import { BounceLoader } from 'react-spinners';
 import SpotifyControl from './SpotifyControl.js';
+import posed from 'react-pose';
 
 import SongDisplay from './SongDisplay.jsx';
-import StartIcon from '../assets/start-button.png';
+import Camera from './Camera.jsx';
 
 const MIN_QUEUE_SIZE = 5;
 const MAX_BACKSTACK_SIZE = 10;
 
 import './Controller.css';
 
+const LikeDisplay = posed.div({
+    hidden: { opacity: 0 },
+    visible: { opacity: 1 },
+});
+
 class Controller extends Component {
     state = {
         error: false,
         loading: true,
         isPlaying: false,
+        result: '',
         song: {
             albumImg: '',
             name: '',
@@ -25,29 +32,29 @@ class Controller extends Component {
             artists: [],
             genres: [],
         },
+        streamMinimized: true,
+        streaming: true,
     };
 
     componentDidMount() {
-        this.spotifyControl = new SpotifyControl(
-            this.handleError,
-            this.handlePlayStateChange
-        );
+        this.spotifyControl = new SpotifyControl();
+        this.spotifyControl
+            .init(this.handleError, this.handlePlayStateChange)
+            .then(success => {
+                if (success) {
+                    this.timerID = setInterval(() => this.tick(), 3000000);
+                    this.spotifyControl.getRecommendations().then(songs => {
+                        console.log(songs);
+                        this.setState({
+                            loading: false,
+                            song: songs[0],
+                        });
 
-        this.spotifyControl.init().then(success => {
-            if (success) {
-                this.timerID = setInterval(() => this.tick(), 3000000);
-                this.spotifyControl.getRecommendations().then(songs => {
-                    console.log(songs);
-                    this.setState({
-                        loading: false,
-                        song: songs[0],
+                        this.queue = songs.slice(1);
+                        this.backStack = [];
                     });
-
-                    this.queue = songs.slice(1);
-                    this.backStack = [];
-                });
-            }
-        });
+                }
+            });
     }
 
     componentWillUnmount() {
@@ -64,13 +71,10 @@ class Controller extends Component {
     handlePlayStateChange = newPlayState => {
         if (this.state.isPlaying && newPlayState.paused === true) {
             this.handlePause();
-        } else if (
-            !this.state.isPlaying &&
-            newPlayState.paused === false
-        ) {
+        } else if (!this.state.isPlaying && newPlayState.paused === false) {
             this.handlePlay();
         }
-    }
+    };
 
     handleError = err => {
         console.log(err);
@@ -79,8 +83,60 @@ class Controller extends Component {
         });
     };
 
-    handleCheckFace = imgBits => {
-        fetch
+    handleCheckFace = imgBlob => {
+        const song = this.state.song;
+        var formData = new FormData();
+        formData.append('track', JSON.stringify(song));
+        formData.append('face', imgBlob);
+
+        fetch(process.env.INDEX_URL + '/face/emotion/', {
+            method: 'POST',
+            body: formData,
+        })
+            .then(response => {
+                console.log(response);
+                return response.json();
+            })
+            .then(json => {
+                if (
+                    json.action != 'none' &&
+                    json.trackId == this.state.song.id
+                ) {
+                    this.setState({
+                        result: json.action,
+                    });
+                    setTimeout(() => {
+                        this.setState({
+                            result: ''
+                        })
+                    }, 1000);
+                }
+            })
+            .catch(() => {this.handleError();});
+    };
+
+    handleStartStream = camera => {
+        this.setState({
+            streaming: true,
+        });
+
+        console.log('Starting stream!');
+
+        camera.videoStream.play();
+    };
+
+    handlePauseStream = camera => {
+        this.setState({
+            streaming: false,
+        });
+
+        camera.videoStream.pause();
+    };
+
+    handleStreamMinimize = () => {
+        this.setState({
+            streamMinimized: !this.state.streamMinimized,
+        });
     };
 
     handlePlay = () => {
@@ -169,7 +225,6 @@ class Controller extends Component {
                         this.backStack != undefined &&
                         this.backStack.length !== 0
                     }
-                    onCheckFace={this.handleCheckFace}
                     onPlay={this.handlePlay}
                     onPause={this.handlePause}
                     onNext={this.handleNext}
@@ -180,7 +235,26 @@ class Controller extends Component {
 
         return (
             <div id="masthead" className="container-fluid">
+                <Camera
+                    width={480}
+                    height={360}
+                    id="camera"
+                    streaming={this.state.streaming}
+                    minimized={this.state.streamMinimized}
+                    onStreamMinimize={this.handleStreamMinimize}
+                    onCheckFace={this.handleCheckFace}
+                    onStartStream={this.handleStartStream}
+                    onPauseStream={this.handlePauseStream}
+                    isPlaying={this.state.isPlaying}
+                />
                 {display}
+                <LikeDisplay
+                    id="like-display"
+                    pose={this.state.result != '' ? 'visible' : 'hidden'}
+                    className={this.state.result != '' ? this.state.result : ''}
+                >
+                    <h1>{this.state.result == 'like' ? 'Liked' : 'Skipped'}</h1>
+                </LikeDisplay>
             </div>
         );
     }

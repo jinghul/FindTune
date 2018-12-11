@@ -5,25 +5,27 @@ import PropTypes from 'prop-types';
 import './SongDisplay.css';
 
 class SongDisplay extends Component {
+    state = {};
     componentDidMount() {
-        console.log(
-            this.props.songArtists.map(artist => artist.name).toString()
-        );
-        this.timerID = setInterval(
-            () => this.props.onCheckFace(),
-            200000 // 20 Seconds interval
-        );
+        this.setState({ width: window.innerWidth, height: window.innerHeight });
+        window.addEventListener('resize', this.updateDimensions);
     }
 
     componentWillUnmount() {
-        clearInterval(this.timerID);
+        window.removeEventListener('resize', this.updateDimensions);
     }
+
+    updateDimensions = () => {
+        this.setState({ width: window.innerWidth, height: window.innerHeight });
+    };
 
     getArtistNames = function(artists) {
         let artist_list = '';
-        artists.forEach(artist => {artist_list += artist.name + ', '});
-        return artist_list.slice(0, artist_list.length - 2)
-    }
+        artists.forEach(artist => {
+            artist_list += artist.name + ', ';
+        });
+        return artist_list.slice(0, artist_list.length - 2);
+    };
 
     render() {
         const isPlaying = this.props.isPlaying;
@@ -31,34 +33,52 @@ class SongDisplay extends Component {
         let mainButton;
         if (!isPlaying) {
             mainButton = (
-                <a className="main-button controller-button" onClick={this.props.onPlay} role="button">
+                <a
+                    className="main-button controller-button"
+                    onClick={this.props.onPlay}
+                    role="button"
+                >
                     <Glyphicon glyph="play" />
                 </a>
             );
         } else {
             mainButton = (
-                <a className="main-button controller-button" onClick={this.props.onPause} role="button">
+                <a
+                    className="main-button controller-button"
+                    onClick={this.props.onPause}
+                    role="button"
+                >
                     <Glyphicon glyph="pause" />
                 </a>
             );
         }
 
+        const divHeightStyle = this.state.height
+            ? { height: this.state.height }
+            : {};
+        const imgHeight = this.state.height ? this.state.height / 2 : {};
+
         return (
-            <div className="flex shadow" id="song-info">
-                <a id="album-img" href={this.props.songHref}>
-                    <Image
-                        className="shadow"
-                        src={this.props.songAlbumImg}
-                        height="100%"
-                    />
-                </a>
-                <div>
-                    <div className="center-text" id="song-name">
-                        {this.props.songName}
-                    </div>
-                    <div className="center-text">
-                        {this.getArtistNames(this.props.songArtists)}
-                    </div>
+            <div className="flex shadow" id="song-info" style={divHeightStyle}>
+                <div
+                    id="album-img-cont"
+                    style={{ height: this.state.height / 2 }}
+                >
+                    <a href={this.props.songHref}>
+                        <Image
+                            id="album-img"
+                            className="shadow"
+                            src={this.props.songAlbumImg}
+                            height={imgHeight}
+                            width="auto"
+                        />
+                    </a>
+                </div>
+                <div className="center-text" id="song-name">
+                    {this.props.songName}
+                </div>
+                <div className="center-text">
+                    {this.getArtistNames(this.props.songArtists)}
                 </div>
                 <div id="controls">
                     <a
@@ -91,6 +111,7 @@ class SongDisplay extends Component {
 SongDisplay.propTypes = {
     albumImg: PropTypes.string,
     canGoBack: PropTypes.bool,
+    height: PropTypes.number,
     isPlaying: PropTypes.bool,
     name: PropTypes.string,
     onBack: PropTypes.func,
@@ -99,7 +120,9 @@ SongDisplay.propTypes = {
     onPause: PropTypes.func,
     onPlay: PropTypes.func,
     songAlbumImg: PropTypes.string,
-    songArtists: PropTypes.string,
+    // eslint-disable-next-line react/forbid-prop-types
+    songArtists: PropTypes.array,
+    songHref: PropTypes.string,
     songName: PropTypes.string,
 };
 

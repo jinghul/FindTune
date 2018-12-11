@@ -3,59 +3,52 @@ import PropTypes from 'prop-types';
 import posed from 'react-pose';
 import { Glyphicon } from 'react-bootstrap';
 
+
+import './Camera.css';
+
 const Box = posed.div({
-    closed: { x: '-95%' },
-    open: { x: '100%' },
+    closed: { x: '-100%' },
+    open: { x: '0%' },
 });
 
 class Camera extends Component {
-    state = {
-        streaming: this.props.streaming,
-        minimized: this.props.minimized,
-        initialized: false,
-    };
-
     componentDidMount() {
+        const _this = this;
         this.videoStream = document.getElementById('video-stream');
-        this.videoStream.oncanplay = function() {
-            if (this.state.streaming) {
-                this.handleStartStream();
-            }
-        };
-    }
-
-    handleStartStream = () => {
-        this.setState({
-            streaming: true,
-        });
-
         navigator.mediaDevices
             .getUserMedia({ video: true })
             .then(stream => (this.videoStream.srcObject = stream))
             .catch(err => {
                 console.log(err);
             });
-    };
 
-    handlePauseStream = () => {
-        this.setState({
-            streaming: false,
-        });
-        this.videoStream.pause();
-    };
+        this.videoStream.oncanplay = function() {
+            _this.initialized = true;
 
-    handleMinimize = () => {
-        this.setState({
-            minimized: !this.state.minimized,
-        });
-    };
+            if (_this.props.streaming) {
+                _this.props.onStartStream(_this);
+            }
+        };
+
+        this.timerID = setInterval(
+            () => {this.takePicture();},
+            20000 // 20 Seconds interval
+        );
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.timerID);
+    }
 
     takePicture = () => {
-        if (this.state.streaming) {
+        if (this.initialized && this.props.streaming && this.props.isPlaying) {
             var canvas = document.createElement('canvas');
             canvas.width = this.props.width;
             canvas.height = this.props.height;
-            return canvas.toDataURL('image/png');
+            canvas.getContext('2d').drawImage(this.videoStream, 0, 0, this.props.width, this.props.width);
+            canvas.toBlob((blob) => {
+                this.props.onCheckFace(blob);
+            });
         }
     };
 
@@ -63,26 +56,33 @@ class Camera extends Component {
         return (
             <Box
                 id="video-container"
-                style={{ height: '15%', width: '20%' }}
-                pose={this.state.minimized ? 'closed' : 'open'}
+                style={{ height: '40%', width: '24%' }}
+                pose={this.props.minimized ? 'closed' : 'open'}
             >
                 <video id="video-stream" height="100%" width="100%" />
-                <a id="minimize-button" role="button" onClick={this.handleMinimize}>
+                <a
+                    id="minimize-button"
+                    role="button"
+                    onClick={this.props.onStreamMinimize}
+                >
                     <Glyphicon
                         glyph={
-                            this.state.minimized ? 'menu-right' : 'menu-left'
+                            this.props.minimized ? 'menu-right' : 'menu-left'
                         }
                     />
                 </a>
-                <a  id="video-play-button"
+                <a
+                    id="video-play-button"
                     role="button"
-                    onClick={
-                        this.state.streaming
-                            ? this.handlePauseStream
-                            : this.handleStartStream
-                    }
+                    onClick={() => {
+                        this.props.streaming
+                            ? this.props.onPauseStream(this)
+                            : this.props.onStartStream(this);
+                    }}
                 >
-                    <Glyphicon glyph={this.state.streaming ? 'pause' : 'play'} />
+                    <Glyphicon
+                        glyph={this.props.streaming ? 'pause' : 'play'}
+                    />
                 </a>
             </Box>
         );
@@ -91,7 +91,12 @@ class Camera extends Component {
 
 Camera.propTypes = {
     height: PropTypes.number,
+    isPlaying: PropTypes.bool,
     minimized: PropTypes.bool,
+    onCheckFace: PropTypes.func,
+    onPauseStream: PropTypes.func,
+    onStartStream: PropTypes.func,
+    onStreamMinimize: PropTypes.func,
     streaming: PropTypes.bool,
     width: PropTypes.number,
 };

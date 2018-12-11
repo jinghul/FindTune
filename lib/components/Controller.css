@@ -21,3 +21,20 @@
     z-index: 2;
     background-color: rgba(211,211,211,0.7);
 }
+
+#like-display {
+    position: absolute;
+    top: 40%;
+    right: 2%;
+    height: 20%;
+    background-color: white;
+    border-radius: 5%;
+}
+
+.like > h1 {
+    color: green;
+}
+
+.dislike > h1 {
+    color: maroon;
+}

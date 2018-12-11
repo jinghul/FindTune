@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const init = require('./init');
-const preference = require('/preference');
+const preference = require('./preference');
 
 /* Utility Methods */
 const path = require('path');

@@ -14,8 +14,10 @@
     "helmet": "^3.15.0",
     "mocha": "^5.2.0",
     "mongoose": "^5.3.10",
+    "multer": "^1.4.1",
     "querystring": "~0.2.0",
     "react-bootstrap": "^0.32.4",
+    "react-pose": "^4.0.4",
     "react-spinners": "^0.4.7",
     "request": "~2.83.0"
   },
@@ -26,7 +28,7 @@
   "scripts": {
     "test": "set NODE_ENV=test&&mocha",
     "start": "set NODE_ENV=production&&node src/index.js",
-    "dev-start": "webpack --mode production && set NODE_ENV=dev&&nodemon src/index.js",
+    "dev-start": "webpack --mode development && set NODE_ENV=dev&&nodemon src/index.js",
     "build": "webpack --mode production",
     "webpack-start": "webpack-dev-server --hot"
   },

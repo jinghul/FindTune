@@ -5,14 +5,6 @@ import './Header.css';
 import Icon from '../assets/favicon.png';
 
 class Header extends Component {
-    isCurrent = name => {
-        if (this.props.page === name) {
-            return 'current';
-        } else {
-            return '';
-        }
-    };
-
     render() {
         return (
             <Navbar className="absolute" fluid>
@@ -25,13 +17,8 @@ class Header extends Component {
                     <Navbar.Toggle />
                 </Navbar.Header>
                 <Navbar.Collapse>
-                    <Nav pullRight>
-                        <NavItem
-                            eventKey={1}
-                            id="home-button"
-                            className={this.isCurrent('home')}
-                            href="/"
-                        >
+                    <Nav pullRight className="shadow">
+                        <NavItem eventKey={1} id="home-button" href="/">
                             Home
                         </NavItem>
                         <NavItem
@@ -40,12 +27,7 @@ class Header extends Component {
                         >
                             About
                         </NavItem>
-                        <NavItem
-                            eventKey={2}
-                            id="play-button"
-                            className={this.isCurrent('play')}
-                            href="/play"
-                        >
+                        <NavItem eventKey={2} id="play-button" href="/play">
                             Explore
                         </NavItem>
                     </Nav>

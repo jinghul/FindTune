@@ -30,8 +30,15 @@
 
 .navbar {
     background-color: transparent;
+}
+
+.navbar, .navbar-collapse.collapse.in {
     border: none;
 }
+
+.navbar-collapse > ul.navbar-nav {
+    background-color: white;
+ }
 
 .navbar-brand {
     display: flex;
@@ -52,10 +59,6 @@
     bottom: 0;
     height: 1px;
     width: 65%;
-}
-
-.navbar-collpase.collapse.in {
-    border: none;
 }
 
 .shadow, .navbar-collapse > ul.navbar-nav > li > a:hover {
