@@ -9,10 +9,6 @@ const PreferenceSchema = new Schema({
     dislikes: { type: Number },
 });
 
-PreferenceSchema.valueOf = function() {
-    return this.id;
-};
-
 const UserSchema = new Schema({
     name: String, // user name, required
     id: { type: String, required: true }, // user id from Spotify, required
@@ -41,7 +37,7 @@ function binaryIndexOf(searchId) {
 
     while (minIndex <= maxIndex) {
         currentIndex = ((minIndex + maxIndex) >>> 1) | 0;
-        currentElement = this[currentIndex];
+        currentElement = this[currentIndex].id;
 
         if (currentElement < searchId) {
             minIndex = currentIndex + 1;
@@ -88,7 +84,7 @@ UserSchema.methods.updateGenres = function(genres, update, confirm) {
             if (update > 0) {
                 preferences[index].likes += 1;
             } else {
-                preferences[index].likes -= 1;
+                preferences[index].dislikes += 1;
             }
         } else {
             var genrePref = {
@@ -122,7 +118,7 @@ UserSchema.methods.updateArtists = function(artists, update, confirm) {
             if (update > 0) {
                 preferences[index].likes += 1;
             } else {
-                preferences[index].likes -= 1;
+                preferences[index].dislikes += 1;
             }
         } else {
             var artistPref = {

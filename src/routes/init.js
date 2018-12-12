@@ -57,11 +57,11 @@ function initPreferences(user, access_token) {
         request.get(get_top_options, (error, response, body) => {
             if (!error && response.statusCode == 200) {
                 body.items.forEach(item =>
-                    user.preferences.tracks.push({
+                    user.updateTracks({
                         name: item.name,
                         id: item.id,
                         image: item.album.images[0].url,
-                    })
+                    }, false)
                 );
                 user.save();
                 resolve();
