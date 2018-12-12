@@ -1,0 +1,71 @@
+/* roboto-regular - latin */
+@font-face {
+    font-family: Roboto;
+    font-style: normal;
+    font-weight: 400;
+    src: url('../assets/fonts/roboto-v18-latin-regular.eot'); /* IE9 Compat Modes */
+    src: local('Roboto'), local('Roboto-Regular'),
+        url('../assets/fonts/roboto-v18-latin-regular.eot?#iefix')
+            format('embedded-opentype'),
+        /* IE6-IE8 */ url('../assets/fonts/roboto-v18-latin-regular.woff2')
+            format('woff2'),
+        /* Super Modern Browsers */
+            url('../assets/fonts/roboto-v18-latin-regular.woff') format('woff'),
+        /* Modern Browsers */
+            url('../assets/fonts/roboto-v18-latin-regular.ttf')
+            format('truetype'),
+        /* Safari, Android, iOS */
+            url('../assets/fonts/roboto-v18-latin-regular.svg#Roboto')
+            format('svg'); /* Legacy iOS */
+}
+
+.absolute {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    padding: 20px;
+}
+
+.navbar {
+    background-color: transparent;
+}
+
+.navbar, .navbar-collapse.collapse.in {
+    border: none;
+}
+
+.navbar-collapse > ul.navbar-nav, .navbar-toggle.collapsed {
+    background-color: white;
+ }
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+}
+
+.navbar-collapse > ul.navbar-nav > li > a {
+    color: #404040;
+    font-size: 20px;
+    font-weight: 600;
+    font-family: Roboto, sans-serif;
+}
+
+.navbar-collapse > ul.navbar-nav > li > a:hover::before {
+    content: '';
+    position: absolute;
+    left: 17.5%;
+    bottom: 0;
+    height: 1px;
+    width: 65%;
+}
+
+.shadow, .navbar-collapse > ul.navbar-nav > li > a:hover {
+    filter: drop-shadow(0 0 0.5rem #000);
+}
+
+.navbar-collapse > ul.navbar-nav > li > a:hover {
+    font-weight: bold;
+    color: #fff;
+}

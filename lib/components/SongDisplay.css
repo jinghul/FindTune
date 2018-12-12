@@ -1,0 +1,84 @@
+/* roboto-regular - latin */
+@font-face {
+    font-family: Roboto;
+    font-style: normal;
+    font-weight: 400;
+    src: url('../assets/fonts/roboto-v18-latin-regular.eot'); /* IE9 Compat Modes */
+    src: local('Roboto'), local('Roboto-Regular'),
+        url('../assets/fonts/roboto-v18-latin-regular.eot?#iefix')
+            format('embedded-opentype'),
+        /* IE6-IE8 */ url('../assets/fonts/roboto-v18-latin-regular.woff2')
+            format('woff2'),
+        /* Super Modern Browsers */
+            url('../assets/fonts/roboto-v18-latin-regular.woff') format('woff'),
+        /* Modern Browsers */
+            url('../assets/fonts/roboto-v18-latin-regular.ttf')
+            format('truetype'),
+        /* Safari, Android, iOS */
+            url('../assets/fonts/roboto-v18-latin-regular.svg#Roboto')
+            format('svg'); /* Legacy iOS */
+}
+
+span.glyphicon {
+   font-size: 30px; 
+}
+
+.controller-button.disabled, .controller-button.disabled:hover {
+    visibility: hidden;
+}
+
+.controller-button, .center-text {
+    text-align: center;
+    color : #ffffff;
+    filter: none;
+}
+
+.controller-button.main-button {
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.controller-button:hover {
+    color: #d3d3d3;
+}
+
+#album-img-cont {
+    margin-left: 2%;
+    margin-right: 2%;
+}
+
+#album-img-cont {
+    margin-bottom: 5%;
+    height: 50%;
+}
+
+#album-img-cont > a {
+    margin: 0 auto;
+}
+
+#album-img {
+    max-width: 100%;
+}
+
+#song-name {
+    font-size: 30px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+#controls {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    margin-top: 5%;
+}
+
+#song-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: Roboto, sans-serif;
+    font-size: 20px;
+    flex-wrap: wrap;
+}

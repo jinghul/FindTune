@@ -1,0 +1,72 @@
+#preference-container {
+    padding-top: 100px;
+    background-color: rgb(240,240,240);
+}
+
+.pref-box {
+    background-color: white;
+}
+
+.pref-box > h1 {
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgb(211,211,211);
+}
+
+.display-box {
+    max-height: 500px;
+    min-height: 200px;
+    overflow-y: scroll;
+}
+
+.display-box > li {
+    display: flex;
+    align-items: center;
+    height: 80px;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+    border-bottom: 1px solid gray;
+}
+
+.display-box > li > .progress {
+    height: 50px;
+    width:50%;
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
+.display-box > li > .progress > .progress-bar {
+    font-size: 20px;
+    padding-top: 15px;
+    font-family: Roboto, sans-serif;
+    font-weight: bold;
+}
+
+.display-box > li > h3 {
+    padding-top: 10px;
+    margin-left: 5%;
+    width:40%;
+    display: inline-block;
+    height: 50px;
+    font-family: Roboto, sans-serif;
+    font-weight: bold;
+}
+
+img {
+    display: inline-block;
+    height: 100%;
+    max-width: 100%;
+}
+
+.fullscreen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    background-color: rgba(211,211,211,0.7);
+}

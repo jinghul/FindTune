@@ -1,5 +1,6 @@
-const mongoose = require("mongoose");
-const database = "mongodb://localhost/findtune";
+const mongoose = require('mongoose');
+const {db : {host, port, name}} = require('./config');
+const database = `mongodb://${host}:${port}/${name}`;
 
 mongoose.connect(
   database,
