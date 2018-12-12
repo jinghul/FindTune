@@ -100,10 +100,18 @@ class Controller extends Component {
                 }
             } else if (this.queue.length != 0 && currentTrack.id == this.queue[0].id){
                 const newSong = this.queue.shift();
+                this.backStack.push(song);
+                this.setState({
+                    song : newSong,
+                });
+            } else if (this.backStack.length != 0 && currentTrack.id == this.backStack[this.backStack.length-1].id) {
+                const newSong = this.backStack.pop();
+                this.queue.unshift(song);
                 this.setState({
                     song : newSong,
                 });
             } else {
+                this.backStack.push(song);
                 var trackUris = [currentTrack.uri].concat(this.getQueueUris());
                 this.setState({
                     song: {
@@ -140,7 +148,7 @@ class Controller extends Component {
     handleError = err => {
         console.log(err);
         this.handlePause();
-        this.handlePauseStream();
+        document.getElementById('video-stream').pause();
         this.setState({
             error: true,
             streaming: false,
