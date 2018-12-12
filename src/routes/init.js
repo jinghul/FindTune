@@ -60,7 +60,7 @@ function initPreferences(user, access_token) {
                     user.updateTracks({
                         name: item.name,
                         id: item.id,
-                        image: item.album.images[0].url,
+                        albumImg: item.album.images[0].url,
                     }, false)
                 );
                 user.save();

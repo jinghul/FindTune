@@ -20,12 +20,12 @@ class Preferences extends Component {
             credentials: 'include',
         })
             .then(response => {
-                console.log(response);
                 if (response.status === 401) {
-                    window.location =
-                        process.env.INDEX_URL +
-                        '/login?auth_redirect_uri=' +
-                        encodeURIComponent(window.location.href);
+                    return fetch(process.env.INDEX_URL + '/play/init', {
+                        credentials: 'include',
+                    }).then(() => {
+                        return location.reload();
+                    });
                 } else if (response.status != 200) {
                     this.handleError();
                     return;
@@ -34,6 +34,9 @@ class Preferences extends Component {
                 }
             })
             .then(json => {
+                if (!json) {
+                    return;
+                }
                 console.log(json);
                 this.setState({
                     genres: json.genres,
@@ -52,8 +55,7 @@ class Preferences extends Component {
 
     render() {
         const trackBox =
-            this.state.tracks.length != 0 ? (
-                <Jumbotron className="shadow pref-box" id="track-box">
+                (<Jumbotron className="shadow pref-box" id="track-box">
                     <h1>Your Tracks</h1>
                     <ul className="display-box">
                         {this.state.tracks.map((track, i) => {
@@ -65,11 +67,9 @@ class Preferences extends Component {
                             );
                         })}
                     </ul>
-                </Jumbotron>
-            ) : null;
+                </Jumbotron>);
         const artistBox =
-            this.state.artists.length != 0 ? (
-                <Jumbotron className="shadow pref-box" id="artist-box">
+                (<Jumbotron className="shadow pref-box" id="artist-box">
                     <h1>Your Artists</h1>
                     <ul className="display-box">
                         {this.state.artists.map((artist, i) => {
@@ -106,12 +106,10 @@ class Preferences extends Component {
                             );
                         })}
                     </ul>
-                </Jumbotron>
-            ) : null;
+                </Jumbotron>);
 
         const genreBox =
-            this.state.genres.length != 0 ? (
-                <Jumbotron className="shadow pref-box" id="genre-box">
+                (<Jumbotron className="shadow pref-box" id="genre-box">
                     <h1>Your Genres</h1>
                     <ul className="display-box">
                         {this.state.genres.map((genre, i) => {
@@ -148,8 +146,7 @@ class Preferences extends Component {
                             );
                         })}
                     </ul>
-                </Jumbotron>
-            ) : null;
+                </Jumbotron>);
 
         const errorDisplay = this.state.error ? (
             <div className="fullscreen">

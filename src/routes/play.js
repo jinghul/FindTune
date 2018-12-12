@@ -115,10 +115,11 @@ router.get('/recommend', (req, res, next) => {
 
         seedTracks = parse(seedTracks, 'seed_tracks');
         seedArtists = parse(seedArtists, 'seed_artists');
-        seedGenres = parse(seedGenres, 'seed-genres');
+        seedGenres = parse(seedGenres, 'seed_genres');
 
         var seeds =
-            seedTracks + seedArtists + seedGenres + '&min_popularity=50';
+            seedTracks + seedArtists + seedGenres + 'min_popularity=50';
+        console.log(seeds);
         var recommendation_options = {
             url:
                 'https://api.spotify.com/v1/recommendations?limit=' +

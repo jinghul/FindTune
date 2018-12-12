@@ -44,7 +44,7 @@ router.get('/', (req, res) => {
 router.get('/preferences', (req, res, next) => {
     User.findOne({_id : req.session.user_uid}).then(user => {
         if (!user) {
-            res.status(500).send('User not found in database.');
+            return res.status(401).send('No user in database');
         }
         var { tracks, artists, genres } = user.preferences;
         res.json({
