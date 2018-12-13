@@ -20,6 +20,7 @@ const UserSchema = new Schema({
     preferences: {
         // preference based on category
         tracks: [PreferenceSchema],
+        badtracks: [PreferenceSchema],
         artists: [PreferenceSchema],
         genres: [PreferenceSchema],
     },
@@ -34,30 +35,39 @@ const UserSchema = new Schema({
 function binaryIndexOf(searchId) {
     'use strict';
 
-    var minIndex = 0;
-    var maxIndex = this.length - 1;
-    var currentIndex;
-    var currentElement;
+    // CANNOT BINARY SEARCH ON UNSORTED DATA
 
-    while (minIndex <= maxIndex) {
-        currentIndex = ((minIndex + maxIndex) >>> 1) | 0;
-        currentElement = this[currentIndex];
-
-        if (currentElement < searchId) {
-            minIndex = currentIndex + 1;
-        } else if (currentElement > searchId) {
-            maxIndex = currentIndex - 1;
-        } else {
-            return currentIndex;
+    for(var i = 0; i < this.length; i++) {
+        if (this[i].id == searchId) {
+            return i;
         }
     }
+    return -1;
 
-    if (minIndex > currentIndex) {
-        return ~minIndex;
-    } else if (maxIndex > currentIndex) {
-        return ~maxIndex;
-    }
-    return ~currentIndex;
+    // var minIndex = 0;
+    // var maxIndex = this.length - 1;
+    // var currentIndex;
+    // var currentElement;
+
+    // while (minIndex <= maxIndex) {
+    //     currentIndex = ((minIndex + maxIndex) >>> 1) | 0;
+    //     currentElement = this[currentIndex];
+
+    //     if (currentElement < searchId) {
+    //         minIndex = currentIndex + 1;
+    //     } else if (currentElement > searchId) {
+    //         maxIndex = currentIndex - 1;
+    //     } else {
+    //         return currentIndex;
+    //     }
+    // }
+
+    // if (minIndex > currentIndex) {
+    //     return ~minIndex;
+    // } else if (maxIndex > currentIndex) {
+    //     return ~maxIndex;
+    // }
+    // return ~currentIndex;
 }
 
 UserSchema.methods.updateTracks = function(track, confirm) {
@@ -66,7 +76,25 @@ UserSchema.methods.updateTracks = function(track, confirm) {
     var preferences = this.preferences.tracks;
     var index = preferences.binaryIndexOf(track.id);
     if (index < 0) {
-        preferences.splice(Math.abs(index), 0, {
+        preferences.splice(-1, 0, {
+            name: track.name,
+            id: track.id,
+            image: track.albumImg,
+        });
+    }
+
+    if (confirm) {
+        this.save();
+    }
+};
+
+UserSchema.methods.updateBadtracks = function(track, confirm) {
+    Array.prototype.binaryIndexOf = binaryIndexOf;
+
+    var preferences = this.preferences.badtracks;
+    var index = preferences.binaryIndexOf(track.id);
+    if (index < 0) {
+        preferences.splice(-1, 0, {
             name: track.name,
             id: track.id,
             image: track.albumImg,
@@ -88,7 +116,7 @@ UserSchema.methods.updateGenres = function(genres, update, confirm) {
             if (update > 0) {
                 preferences[index].likes += 1;
             } else {
-                preferences[index].likes -= 1;
+                preferences[index].dislikes += 1;
             }
         } else {
             var genrePref = {
@@ -103,7 +131,7 @@ UserSchema.methods.updateGenres = function(genres, update, confirm) {
                 genrePref.dislikes = 1;
             }
 
-            preferences.splice(Math.abs(index), 0, genrePref);
+            preferences.splice(-1, 0, genrePref);
         }
     });
 
@@ -122,7 +150,7 @@ UserSchema.methods.updateArtists = function(artists, update, confirm) {
             if (update > 0) {
                 preferences[index].likes += 1;
             } else {
-                preferences[index].likes -= 1;
+                preferences[index].dislikes += 1;
             }
         } else {
             var artistPref = {
@@ -138,7 +166,7 @@ UserSchema.methods.updateArtists = function(artists, update, confirm) {
                 artistPref.dislikes = 1;
             }
 
-            preferences.splice(Math.abs(index), 0, artistPref);
+            preferences.splice(-1, 0, artistPref);
         }
     });
 
@@ -153,7 +181,13 @@ UserSchema.statics.findOneAndUpdatePreferences = function(
     update
 ) {
     User.findOne(query).then(user => {
-        user.updateTracks(track);
+        if (update > 0) {
+            user.updateTracks(track);
+        }
+        else {
+            user.updateBadtracks(track)
+        }
+
         user.updateGenres(track.genres, update);
         user.updateArtists(track.artists, update);
         user.save();
