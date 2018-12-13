@@ -7,14 +7,14 @@ const User = require('../models/user');
 function like(req, res, next) {
     var track = JSON.parse(req.body.track);
 
-    Playlist.findOne({_id : req.session.playlist_uid}).then(playlist => {
-        if (!playlist) {
-            return res.status(401).send('Playlist not found.');
+    User.findOne({_id : req.session.user_uid}).then(user => {
+        if (!user) {
+            return res.status(401).send('User not found.');
         }
-
+        playlist = user.preferences.tracks
         var found = false;
-        for (var i=0; i < playlist.songs.length; i++) {
-            if (playlist.songs[i].id == track.id) {
+        for (var i=0; i < playlist.length; i++) {
+            if (playlist[i].id == track.id) {
                 found = true;
                 break;
             }
@@ -24,9 +24,9 @@ function like(req, res, next) {
     }).then(found => {
 
         if (found) {
-            return res.status(200).send('Song already exists in playlist.');
-        }
 
+        }
+        else {
         var add_track_options = {
             url:
                 'https://api.spotify.com/v1/playlists/' +
@@ -56,6 +56,7 @@ function like(req, res, next) {
     
         User.findOneAndUpdatePreferences({ _id: req.session.user_uid }, track, 1);
         res.json({ action: 'like', trackId: track.id }).end();
+    }
     });
 }
 
