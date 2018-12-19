@@ -4,17 +4,16 @@ const keys = require('../keys.json');
 
 const production = {
     app: {
-        // TODO: check that the port is working in production urls.
         host: 'localhost',
-        port : 8888 || process.env.PORT,
-        index: function() {return 'http://' + this.host}
+        port: 8888 || process.env.PORT,
+        index: function() {return 'http://' + this.host + ':' + this.port}
     },
     db: {
         host: 'localhost',
         port: 27017,
         name: "findtune"
     },
-    keys: keys 
+    keys: keys
 };
 
 const dev = {

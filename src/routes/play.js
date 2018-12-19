@@ -119,7 +119,6 @@ router.get('/recommend', (req, res, next) => {
 
         var seeds =
             seedTracks + seedArtists + seedGenres + 'min_popularity=50';
-        console.log(seeds);
         var recommendation_options = {
             url:
                 'https://api.spotify.com/v1/recommendations?limit=' +

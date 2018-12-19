@@ -5,7 +5,7 @@ const SongSchema = new Schema({
     name: { type: String, required: true }, // name of the song
     id: { type: String, required: true }, // songID from Spotify, required
     uri: { type: String, required: true }, // song uri for playback
-    album_img: {type: String},
+    albumImg: {type: String},
     artists: [
         {
             name: { type: String, required: true },

@@ -27,7 +27,7 @@
   },
   "scripts": {
     "test": "set NODE_ENV=test&&mocha",
-    "start": "webpack --mode production && set NODE_ENV=production&&node src/index.js",
+    "start": "set NODE_ENV=production&&node src/index.js",
     "dev-start": "webpack --mode development && set NODE_ENV=dev&&nodemon src/index.js",
     "build": "webpack --mode production",
     "webpack-start": "webpack-dev-server --hot"

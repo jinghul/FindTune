@@ -57,10 +57,10 @@ function initPreferences(user, access_token) {
         request.get(get_top_options, (error, response, body) => {
             if (!error && response.statusCode == 200) {
                 body.items.forEach(item =>
-                    user.updateTracks({
+                    user.updateTrack({
                         name: item.name,
                         id: item.id,
-                        albumImg: item.album.images[0].url,
+                        albumImg: item.album.images[0].url
                     }, false)
                 );
                 user.save();
@@ -75,16 +75,17 @@ function initPreferences(user, access_token) {
 async function verify_playlist(req, res, next) {
     if (!req.session.playlist_uid) {
         /* User has no associated playlist. */
-        delete req.session.playlist_uid;
         return next();
     } else {
         var playlist = await Playlist.findOne({
             _id: req.session.playlist_uid,
         });
+
         if (playlist === null) {
             delete req.session.playlist_uid;
             return next();
         }
+
         req.session.playlistid = playlist.id;
     }
 

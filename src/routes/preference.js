@@ -11,22 +11,19 @@ function like(req, res, next) {
                 return res.status(401).send('Playlist not found.');
             }
 
-            var found = false;
+            var track = JSON.parse(req.body.track);
             for (var i = 0; i < playlist.songs.length; i++) {
-                if (playlist.songs[i].id == req.body.track.id) {
-                    found = true;
-                    break;
+                if (playlist.songs[i].id == track.id) {
+                    return null;
                 }
             }
 
-            return found;
+            return track;
         })
-        .then(found => {
-            if (found) {
+        .then(track => {
+            if (!track) {
                 return res.json({ action: 'none' }).end();
             }
-
-            var track = JSON.parse(req.body.track);
 
             var add_track_options = {
                 url:
@@ -47,7 +44,11 @@ function like(req, res, next) {
                 if (!error && response.statusCode == 201) {
                     Playlist.findOneAndUpdate(
                         { _id: req.session.playlist_uid },
-                        { $addToSet: { songs: track } }
+                        { $push: { songs : track } }, {returnNewDocument:true}, function(error, result) {
+                            if (error) {
+                                next(error);
+                            }
+                        }
                     );
                 } else {
                     next({

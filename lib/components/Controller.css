@@ -26,8 +26,10 @@
     position: absolute;
     display: flex;
     top: 45%;
-    right: 5%;
+    right: 10%;
     height: 10%;
+    padding-left: 5%;
+    padding-right: 5%;
     align-items: center;
     border-radius: 5%;
 }

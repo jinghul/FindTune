@@ -84,7 +84,7 @@ class Preferences extends Component {
                                                     artist.likes /
                                                         (artist.likes +
                                                             artist.dislikes)
-                                                ) * 100
+                                                *100)
                                             }
                                             key={1}
                                             label={`Like`}
@@ -96,7 +96,7 @@ class Preferences extends Component {
                                                     artist.dislikes /
                                                         (artist.likes +
                                                             artist.dislikes)
-                                                ) * 100
+                                                *100)
                                             }
                                             key={2}
                                             label={`Dislike`}
@@ -124,7 +124,7 @@ class Preferences extends Component {
                                                     genre.likes /
                                                         (genre.likes +
                                                             genre.dislikes)
-                                                ) * 100
+                                                * 100)
                                             }
                                             key={1}
                                             label={`Like`}
@@ -136,7 +136,7 @@ class Preferences extends Component {
                                                     genre.dislikes /
                                                         (genre.likes +
                                                             genre.dislikes)
-                                                ) * 100
+                                                * 100)
                                             }
                                             key={2}
                                             label={`Dislike`}
