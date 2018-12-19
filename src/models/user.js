@@ -16,6 +16,7 @@ const UserSchema = new Schema({
     preferences: {
         // preference based on category
         tracks: [PreferenceSchema],
+        badtracks: [PreferenceSchema],
         artists: [PreferenceSchema],
         genres: [PreferenceSchema],
     },
